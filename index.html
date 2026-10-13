@@ -1585,12 +1585,20 @@ async function results(id){
 }
 /* ---- Question renderer (live + self-paced) ---- */
 function initDraw(b,send){
-  const c=b.querySelector('#cv'),x=c.getContext('2d');let on=false,dirty=false;
-  const clr=()=>{x.fillStyle='#fff';x.fillRect(0,0,320,320);x.strokeStyle='#0f172a';x.lineWidth=4;x.lineCap='round';x.lineJoin='round';dirty=false};clr();
+  const c=b.querySelector('#cv'),x=c.getContext('2d');let on=false,dirty=false,col='#0f172a',tool='pen';
+  const W={pen:2,brush:10,erase:22},CL=['#0f172a','#dc2626','#ea580c','#facc15','#16a34a','#2563eb','#7c3aed','#db2777','#92400e','#ffffff'];
+  const clr=()=>{x.fillStyle='#fff';x.fillRect(0,0,320,320);x.lineCap='round';x.lineJoin='round';dirty=false};clr();
+  const tb=document.createElement('div');
+  tb.innerHTML='<div class="row" id="tl" style="flex-wrap:wrap">'+[['pen','✏️ පැන්සල'],['brush','🖌️ බ්‍රෂ්'],['erase','🧽 මකනය']].map(([k,l])=>`<button class="g2" data-t="${k}" style="width:auto;flex:1;padding:6px;margin:2px;font-size:.85rem">${l}</button>`).join('')+'</div><div id="pl" style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0">'+CL.map(k=>`<span data-c="${k}" style="width:30px;height:30px;border-radius:50%;background:${k};border:2px solid #94a3b8;cursor:pointer;display:inline-block"></span>`).join('')+'</div>';
+  c.parentNode.insertBefore(tb,c);
+  const mark=()=>{tb.querySelectorAll('[data-t]').forEach(z=>z.style.outline=z.dataset.t==tool?'3px solid var(--p)':'none');tb.querySelectorAll('[data-c]').forEach(z=>z.style.outline=z.dataset.c==col&&tool!='erase'?'3px solid var(--p)':'none')};
+  tb.querySelectorAll('[data-t]').forEach(z=>z.onclick=()=>{tool=z.dataset.t;mark()});
+  tb.querySelectorAll('[data-c]').forEach(z=>z.onclick=()=>{col=z.dataset.c;if(tool=='erase')tool='pen';mark()});mark();
+  const st=()=>{x.strokeStyle=tool=='erase'?'#fff':col;x.lineWidth=W[tool];x.globalAlpha=tool=='brush'?.85:1};
   const pt=e=>{const r=c.getBoundingClientRect();return[(e.clientX-r.left)*320/r.width,(e.clientY-r.top)*320/r.height]};
-  c.onpointerdown=e=>{on=true;dirty=true;c.setPointerCapture(e.pointerId);const[a,d]=pt(e);x.beginPath();x.moveTo(a,d);x.lineTo(a+.1,d+.1);x.stroke()};
+  c.onpointerdown=e=>{on=true;dirty=true;c.setPointerCapture(e.pointerId);st();const[a,d]=pt(e);x.beginPath();x.moveTo(a,d);x.lineTo(a+.1,d+.1);x.stroke()};
   c.onpointermove=e=>{if(!on)return;const[a,d]=pt(e);x.lineTo(a,d);x.stroke()};
-  c.onpointerup=c.onpointercancel=()=>{on=false};
+  c.onpointerup=c.onpointercancel=()=>{on=false;x.globalAlpha=1};
   b.querySelector('#dc').onclick=clr;
   b.querySelector('#db').onclick=()=>{if(!dirty)return alert('මුලින් චිත්‍රයක් අඳින්න');send(c.toDataURL('image/jpeg',.6))};
 }
