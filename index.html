@@ -3,53 +3,65 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ICTPLUZ Smart Classroom</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,'Noto Sans Sinhala',sans-serif;background:#f1f5f9;color:#0f172a}
-header{background:#1e3a8a;color:#fff;padding:12px 16px;font-weight:700}
-.v{max-width:980px;margin:16px auto;padding:0 12px}.card{background:#fff;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 1px 4px #0002}
-input,select,button{font:inherit;padding:10px;border-radius:8px;border:1px solid #cbd5e1;width:100%;margin:4px 0}
-button{background:#2563eb;color:#fff;border:0;cursor:pointer}button.r{background:#dc2626}button.o{background:#fff;color:#0f172a;border:1px solid #cbd5e1;text-align:left}
+:root{--p:#2563eb;--pd:#1e3a8a;--bg:#f1f5f9;--c:#fff;--t:#0f172a;--b:#cbd5e1;--ok:#16a34a;--bad:#dc2626}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,'Noto Sans Sinhala',sans-serif;background:var(--bg);color:var(--t)}
+header{background:var(--pd);color:#fff;padding:12px 16px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+#net{font-size:.75rem;font-weight:400;padding:3px 10px;border-radius:99px;background:#dc2626}#net.on{background:#16a34a}
+.v{max-width:980px;margin:16px auto;padding:0 12px}.card{background:var(--c);border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 1px 4px #0002}
+h3{margin:0 0 8px}
+input,select,button{font:inherit;padding:10px;border-radius:8px;border:1px solid var(--b);width:100%;margin:4px 0}
+input:focus,select:focus{outline:2px solid var(--p);border-color:transparent}
+button{background:var(--p);color:#fff;border:0;cursor:pointer}button:hover{filter:brightness(1.08)}button:disabled{cursor:default;filter:none}
+button.r{background:var(--bad)}button.g2{background:#475569}
+button.o{background:#fff;color:var(--t);border:1px solid var(--b);text-align:left}
+button.o.sel{border:2px solid var(--p);background:#dbeafe}
 .g{display:grid;gap:12px;grid-template-columns:1fr 1fr}@media(max-width:700px){.g{grid-template-columns:1fr}}
+.row{display:flex;gap:8px}.row button{margin:4px 0}
 video{width:100%;background:#000;border-radius:8px;max-height:60vh}
-.code{font-size:2rem;letter-spacing:6px;font-weight:800;color:#1e3a8a}
-.bar{background:#dbeafe;border-radius:6px;margin:4px 0;padding:6px}.bar i{display:block;height:6px;background:#2563eb;border-radius:3px}
-#qr{display:flex;justify-content:center;padding:8px}
+.code{font-size:2rem;letter-spacing:6px;font-weight:800;color:var(--pd)}
+.bar{background:#dbeafe;border-radius:6px;margin:4px 0;padding:6px}.bar i{display:block;height:6px;background:var(--p);border-radius:3px;transition:width .3s}
+#qr{display:flex;justify-content:center;padding:8px}small{word-break:break-all}
+.st{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #e2e8f0}.st b{margin-left:auto}
+.d{width:9px;height:9px;border-radius:50%;background:#94a3b8}.d.on{background:var(--ok)}
+.ok{color:var(--ok);font-weight:700}.bad{color:var(--bad);font-weight:700}
+#sl{max-height:260px;overflow:auto}
 </style></head><body>
-<header>ICTPLUZ Smart Classroom</header>
+<header><span>ICTPLUZ Smart Classroom</span><span id="net">Offline</span></header>
 
-<!-- ගුරු පිවිසුම -->
 <div class="v" id="tLogin" hidden><div class="card"><h3>ගුරු පිවිසුම</h3>
-<input id="em" type="email" placeholder="Email"><input id="pw" type="password" placeholder="මුරපදය">
+<input id="em" type="email" placeholder="Email" autocomplete="username"><input id="pw" type="password" placeholder="මුරපදය" autocomplete="current-password">
 <button onclick="login()">පිවිසෙන්න</button></div></div>
 
-<!-- ගුරු පාලක පුවරුව -->
 <div class="v" id="tDash" hidden><div class="card"><h3>නව පන්තියක්</h3>
-<button onclick="createRoom()">Start Classroom</button>
+<button onclick="openRoom()">Start Classroom</button>
+<button id="rs" class="g2" onclick="openRoom(localStorage.room)" hidden>පෙර පන්තිය නැවත විවෘත කරන්න</button>
 <button class="o" onclick="auth.signOut()">ඉවත් වන්න</button></div></div>
 
 <div class="v" id="tRoom" hidden>
 <div class="g">
 <div class="card" style="text-align:center"><div>Join Code</div><div class="code" id="rc"></div><div id="qr"></div>
-<small id="ju"></small></div>
+<small id="ju"></small><button class="g2" onclick="copyLink()">සබැඳිය පිටපත් කරන්න</button></div>
 <div class="card"><h3>සිසුන් (<span id="cnt">0</span>)</h3><div id="sl"></div></div></div>
 <div class="g">
 <div class="card"><h3>තිරය Share කිරීම</h3><video id="pv" autoplay muted playsinline></video>
-<button id="sb" onclick="share()">තිරය Share කරන්න</button><button class="r" onclick="stopShare()">Share නවත්වන්න</button></div>
+<div class="row"><button onclick="share()">තිරය Share කරන්න</button><button class="r" onclick="stopShare()">නවත්වන්න</button></div></div>
 <div class="card"><h3>Live ප්‍රශ්නය</h3>
 <input id="qt" placeholder="ප්‍රශ්නය">
 <input class="qo" placeholder="පිළිතුර 1"><input class="qo" placeholder="පිළිතුර 2">
 <input class="qo" placeholder="පිළිතුර 3"><input class="qo" placeholder="පිළිතුර 4">
 <select id="qa"><option value="0">නිවැරදි: 1</option><option value="1">නිවැරදි: 2</option><option value="2">නිවැරදි: 3</option><option value="3">නිවැරදි: 4</option></select>
-<button onclick="sendQ()">සිසුන්ට යවන්න</button><button class="r" onclick="closeQ()">වසා ලකුණු දෙන්න</button>
-<div id="res"></div></div></div></div>
+<div class="row"><button onclick="sendQ()">සිසුන්ට යවන්න</button><button class="r" onclick="closeQ()">වසා ලකුණු දෙන්න</button></div>
+<div id="res"></div></div></div>
+<button class="r" onclick="endClass()">පන්තිය අවසන් කරන්න</button></div>
 
-<!-- සිසු පිවිසුම -->
 <div class="v" id="sJoin" hidden><div class="card"><h3>පන්තියට සම්බන්ධ වන්න</h3>
 <input id="sc" placeholder="පන්ති කේතය" maxlength="6" style="text-transform:uppercase">
-<input id="sn" placeholder="ඔබේ නම"><button onclick="sJoin()">Join</button></div></div>
+<input id="sn" placeholder="ඔබේ නම" maxlength="30"><button onclick="sJoin()">Join</button></div></div>
 
 <div class="v" id="sRoom" hidden>
 <div class="card"><b id="me"></b> — ලකුණු: <b id="sc2">0</b></div>
-<div class="card"><video id="vid" autoplay muted playsinline></video><div id="vm">ගුරුවරයා තිරය Share කරන තෙක් රැඳී සිටින්න…</div></div>
+<div class="card"><video id="vid" autoplay muted playsinline></video><div id="vm">ගුරුවරයා තිරය Share කරන තෙක් රැඳී සිටින්න…</div>
+<button class="g2" onclick="$('vid').requestFullscreen&&$('vid').requestFullscreen()">සම්පූර්ණ තිරය</button></div>
 <div class="card" id="qb">ප්‍රශ්නයක් එනතුරු රැඳී සිටින්න…</div></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -57,29 +69,54 @@ video{width:100%;background:#000;border-radius:8px;max-height:60vh}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-// === Firebase Console > Project settings වෙතින් ඔබේ config මෙහි දමන්න ===
-npm install firebase
+// === Firebase Console > Project settings > Your apps > Config මෙහි දමන්න ===
+firebase.initializeApp({
+  apiKey:"YOUR_API_KEY",authDomain:"YOUR_PROJECT.firebaseapp.com",
+  databaseURL:"https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId:"YOUR_PROJECT",appId:"YOUR_APP_ID"});
+const auth=firebase.auth(),db=firebase.database();
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const show=id=>['tLogin','tDash','tRoom','sJoin','sRoom'].forEach(x=>$(x).hidden=x!=id);
 const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
-const C0=new URLSearchParams(location.search).get('c');
-let R,Q,stream,sid,pcs={},watched={};
+const C0=(new URLSearchParams(location.search).get('c')||'').toUpperCase();
+let R,Q,A={},S={},stream,sid,pcs={},watched={},q0,my,spc;
 
-if(C0){$('sc').value=C0;show('sJoin')}
-else auth.onAuthStateChanged(u=>show(u&&!u.isAnonymous?'tDash':'tLogin'));
+db.ref('.info/connected').on('value',s=>{$('net').textContent=s.val()?'Online':'Offline';$('net').className=s.val()?'on':''});
+
+if(C0){$('sc').value=C0;try{$('sn').value=localStorage.sn||''}catch(e){}show('sJoin')}
+else auth.onAuthStateChanged(u=>{
+  const t=u&&!u.isAnonymous;show(t?'tDash':'tLogin');
+  if(t)$('rs').hidden=!localStorage.room;
+});
+['em','pw'].forEach(i=>$(i).addEventListener('keydown',e=>e.key==='Enter'&&login()));
 
 /* ---------- ගුරුවරයා ---------- */
-function login(){auth.signInWithEmailAndPassword($('em').value,$('pw').value).catch(e=>alert('පිවිසීම අසාර්ථකයි: '+e.message))}
-function createRoom(){
-  const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let c='';for(let i=0;i<6;i++)c+=A[Math.floor(Math.random()*A.length)];
+function login(){auth.signInWithEmailAndPassword($('em').value.trim(),$('pw').value).catch(e=>alert('පිවිසීම අසාර්ථකයි: '+e.message))}
+async function openRoom(old){
+  let c=old;
+  if(!c){const L='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';c='';for(let i=0;i<6;i++)c+=L[Math.floor(Math.random()*L.length)]}
   R=db.ref('rooms/'+c);
-  R.set({owner:auth.currentUser.uid,created:Date.now(),sharing:false}).then(()=>{
-    $('rc').textContent=c;const url=location.origin+location.pathname+'?c='+c;$('ju').textContent=url;
-    $('qr').innerHTML='';new QRCode($('qr'),{text:url,width:200,height:200});show('tRoom');listenT()});
+  if(old){
+    const o=(await R.child('owner').once('value')).val();
+    if(o!==auth.currentUser.uid){localStorage.removeItem('room');$('rs').hidden=true;return alert('මෙම පන්තිය තවදුරටත් නොපවතී')}
+    await R.child('sharing').set(false);
+  }else await R.set({owner:auth.currentUser.uid,created:Date.now(),sharing:false});
+  localStorage.room=c;$('rc').textContent=c;
+  const url=location.origin+location.pathname+'?c='+c;$('ju').textContent=url;
+  $('qr').innerHTML='';new QRCode($('qr'),{text:url,width:200,height:200});show('tRoom');listenT();
 }
+function copyLink(){navigator.clipboard.writeText($('ju').textContent).then(()=>alert('පිටපත් කරන ලදී ✅'))}
 function listenT(){
-  R.child('students').on('value',s=>{const v=s.val()||{};$('cnt').textContent=Object.keys(v).length;
-    $('sl').innerHTML=Object.values(v).sort((a,b)=>(b.score||0)-(a.score||0)).map(x=>`<div>${x.name} — ${x.score||0}</div>`).join('')});
-  R.child('q').on('value',s=>{Q=s.val();drawRes()});R.child('answers').on('value',drawRes);
+  R.child('students').on('value',s=>{S=s.val()||{};drawList()});
+  R.child('q').on('value',s=>{Q=s.val();drawRes();drawList()});
+  R.child('answers').on('value',s=>{A=s.val()||{};drawRes();drawList()});
   R.child('sig').on('child_added',s=>watch(s.key));
+}
+function drawList(){
+  const e=Object.entries(S).sort((a,b)=>(b[1].score||0)-(a[1].score||0));
+  $('cnt').textContent=e.filter(x=>x[1].online).length+'/'+e.length;
+  $('sl').innerHTML=e.map(([id,x])=>`<div class="st"><span class="d ${x.online?'on':''}"></span>${esc(x.name)}${Q&&Q.open&&A[id]&&A[id].q==Q.id?' ✓':''}<b>${x.score||0}</b></div>`).join('');
 }
 async function share(){
   try{stream=await navigator.mediaDevices.getDisplayMedia({video:true})}catch(e){return}
@@ -87,66 +124,85 @@ async function share(){
 }
 function stopShare(){
   if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;$('pv').srcObject=null;
-  Object.values(pcs).forEach(p=>p.close());pcs={};R.child('sharing').set(false);
+  Object.values(pcs).forEach(p=>p.close());pcs={};if(R)R.child('sharing').set(false);
 }
 function watch(id){
   if(watched[id])return;watched[id]=1;
   R.child('sig/'+id+'/ready').on('value',async s=>{
     if(!s.val()||!stream)return;
     if(pcs[id])pcs[id].close();
-    const pc=pcs[id]=new RTCPeerConnection(ICE);
+    const pc=pcs[id]=new RTCPeerConnection(ICE),an=R.child('sig/'+id+'/answer'),sc=R.child('sig/'+id+'/sc');
+    an.off();sc.off();
     stream.getTracks().forEach(t=>pc.addTrack(t,stream));
     pc.onicecandidate=e=>e.candidate&&R.child('sig/'+id+'/tc').push(JSON.stringify(e.candidate));
     await pc.setLocalDescription(await pc.createOffer());
     await R.child('sig/'+id+'/offer').set(JSON.stringify(pc.localDescription));
-    R.child('sig/'+id+'/answer').on('value',async a=>{
+    an.on('value',async a=>{
       if(a.val()&&!pc.remoteDescription){await pc.setRemoteDescription(JSON.parse(a.val()));
-        R.child('sig/'+id+'/sc').on('child_added',c=>pc.addIceCandidate(JSON.parse(c.val())))}});
+        sc.on('child_added',c=>pc.addIceCandidate(JSON.parse(c.val())).catch(()=>{}))}});
   });
 }
 function sendQ(){
-  const o=[...document.querySelectorAll('.qo')].map(i=>i.value.trim()).filter(Boolean);
-  if(!$('qt').value||o.length<2)return alert('ප්‍රශ්නය සහ අවම පිළිතුරු 2ක් අවශ්‍යයි');
-  R.child('answers').remove();R.child('q').set({id:Date.now(),text:$('qt').value,opts:o,ans:+$('qa').value,open:true});
+  const o=[...document.querySelectorAll('.qo')].map(i=>i.value.trim()).filter(Boolean),a=+$('qa').value;
+  if(!$('qt').value.trim()||o.length<2)return alert('ප්‍රශ්නය සහ අවම පිළිතුරු 2ක් අවශ්‍යයි');
+  if(a>=o.length)return alert('නිවැරදි පිළිතුර හිස් විකල්පයකි');
+  R.child('answers').remove();R.child('q').set({id:Date.now(),text:$('qt').value.trim(),opts:o,ans:a,open:true});
 }
 async function closeQ(){
-  if(!Q||!Q.open)return;const a=(await R.child('answers').once('value')).val()||{};
-  Object.entries(a).forEach(([id,x])=>{if(x.q==Q.id&&x.i==Q.ans)R.child('students/'+id+'/score').transaction(v=>(v||0)+1)});
-  R.child('q/open').set(false);
+  if(!Q||!Q.open)return;
+  await R.child('q/open').set(false);
+  Object.entries(A).forEach(([id,x])=>{if(x.q==Q.id&&x.i==Q.ans)R.child('students/'+id+'/score').transaction(v=>(v||0)+1)});
 }
-async function drawRes(){
+function drawRes(){
   if(!Q){$('res').innerHTML='';return}
-  const a=(await R.child('answers').once('value')).val()||{},n=Object.values(a).filter(x=>x.q==Q.id);
-  $('res').innerHTML=`<p><b>${Q.text}</b> (පිළිතුරු ${n.length})</p>`+Q.opts.map((o,i)=>{
+  const n=Object.values(A).filter(x=>x.q==Q.id);
+  $('res').innerHTML=`<p><b>${esc(Q.text)}</b> (පිළිතුරු ${n.length})</p>`+Q.opts.map((o,i)=>{
     const c=n.filter(x=>x.i==i).length,p=n.length?c*100/n.length:0;
-    return `<div class="bar">${o}${!Q.open&&i==Q.ans?' ✅':''} — ${c}<i style="width:${p}%"></i></div>`}).join('');
+    return `<div class="bar">${esc(o)}${!Q.open&&i==Q.ans?' ✅':''} — ${c}<i style="width:${p}%"></i></div>`}).join('');
+}
+function endClass(){
+  if(!confirm('පන්තිය අවසන් කරන්නද? සියලු දත්ත මැකෙනු ඇත.'))return;
+  stopShare();R.remove();localStorage.removeItem('room');R.off();R=null;watched={};A={};S={};Q=null;
+  $('rs').hidden=true;show('tDash');
 }
 
 /* ---------- සිසුවා ---------- */
+function renderQ(){
+  const q=q0,b=$('qb');
+  if(!q){b.textContent='ප්‍රශ්නයක් එනතුරු රැඳී සිටින්න…';return}
+  const mine=my&&my.q==q.id;let h=`<b>${esc(q.text)}</b>`;
+  if(q.open)h+=q.opts.map((o,i)=>`<button class="o${mine&&my.i==i?' sel':''}" data-i="${i}" ${mine?'disabled':''}>${esc(o)}</button>`).join('');
+  else{const ok=mine&&my.i==q.ans;
+    h+=`<p class="${mine?(ok?'ok':'bad'):''}">${mine?(ok?'නිවැරදියි! ✅ +1':'වැරදියි ❌'):'ඔබ පිළිතුරු දුන්නේ නැත'}</p><p>නිවැරදි පිළිතුර: ${esc(q.opts[q.ans])}</p>`}
+  b.innerHTML=h;
+  b.querySelectorAll('button[data-i]').forEach(x=>x.onclick=()=>R.child('answers/'+sid).set({q:q.id,i:+x.dataset.i}));
+}
 async function sJoin(){
-  const code=$('sc').value.trim().toUpperCase(),name=$('sn').value.trim();if(!code||!name)return;
-  const u=(await auth.signInAnonymously()).user;sid=u.uid;R=db.ref('rooms/'+code);
-  if(!(await R.child('owner').once('value')).exists())return alert('පන්ති කේතය වැරදියි');
-  await R.child('students/'+sid).update({name});$('me').textContent=name;show('sRoom');
+  const code=$('sc').value.trim().toUpperCase(),name=$('sn').value.trim().slice(0,30);if(!code||!name)return alert('කේතය සහ නම අවශ්‍යයි');
+  try{
+    sid=(await auth.signInAnonymously()).user.uid;R=db.ref('rooms/'+code);
+    if(!(await R.child('owner').once('value')).exists())return alert('පන්ති කේතය වැරදියි');
+    try{localStorage.sn=name}catch(e){}
+    await R.child('students/'+sid).update({name});$('me').textContent=name;show('sRoom');
+  }catch(e){return alert('සම්බන්ධ විය නොහැක: '+e.message)}
+  const pr=R.child('students/'+sid+'/online');
+  db.ref('.info/connected').on('value',s=>{if(s.val()){pr.onDisconnect().set(false);pr.set(true)}});
+  R.child('owner').on('value',s=>{if(!s.exists()){alert('පන්තිය අවසන් විය');location.href=location.pathname}});
   R.child('students/'+sid+'/score').on('value',s=>$('sc2').textContent=s.val()||0);
   R.child('sharing').on('value',s=>{
     if(s.val()){$('vm').textContent='සම්බන්ධ වෙමින්…';R.child('sig/'+sid).remove().then(()=>R.child('sig/'+sid+'/ready').set(Date.now()))}
-    else{$('vid').srcObject=null;$('vm').textContent='ගුරුවරයා තිරය Share කරන තෙක් රැඳී සිටින්න…'}});
+    else{if(spc)spc.close();$('vid').srcObject=null;$('vm').textContent='ගුරුවරයා තිරය Share කරන තෙක් රැඳී සිටින්න…'}});
   R.child('sig/'+sid+'/offer').on('value',async s=>{
-    if(!s.val())return;const pc=new RTCPeerConnection(ICE);
+    if(!s.val())return;
+    if(spc)spc.close();const pc=spc=new RTCPeerConnection(ICE),tc=R.child('sig/'+sid+'/tc');tc.off();
     pc.ontrack=e=>{$('vid').srcObject=e.streams[0];$('vm').textContent=''};
     pc.onicecandidate=e=>e.candidate&&R.child('sig/'+sid+'/sc').push(JSON.stringify(e.candidate));
     await pc.setRemoteDescription(JSON.parse(s.val()));
-    R.child('sig/'+sid+'/tc').on('child_added',c=>pc.addIceCandidate(JSON.parse(c.val())));
+    tc.on('child_added',c=>pc.addIceCandidate(JSON.parse(c.val())).catch(()=>{}));
     await pc.setLocalDescription(await pc.createAnswer());
     R.child('sig/'+sid+'/answer').set(JSON.stringify(pc.localDescription));
   });
-  R.child('q').on('value',s=>{const q=s.val(),b=$('qb');if(!q){return}
-    if(!q.open){b.innerHTML=`<b>${q.text}</b><p>ප්‍රශ්නය අවසන්. නිවැරදි පිළිතුර: ${q.opts[q.ans]}</p>`;return}
-    b.innerHTML=`<b>${q.text}</b>`+q.opts.map((o,i)=>`<button class="o" data-i="${i}">${o}</button>`).join('');
-    b.querySelectorAll('button').forEach(x=>x.onclick=()=>{
-      R.child('answers/'+sid).set({q:q.id,i:+x.dataset.i});
-      b.querySelectorAll('button').forEach(y=>{y.disabled=true;y.style.opacity=y==x?1:.5});});
-  });
+  R.child('answers/'+sid).on('value',s=>{my=s.val();renderQ()});
+  R.child('q').on('value',s=>{q0=s.val();renderQ()});
 }
 </script></body></html>
