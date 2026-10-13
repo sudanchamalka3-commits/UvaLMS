@@ -25,6 +25,7 @@ video{width:100%;background:#000;border-radius:8px;max-height:60vh}
 .d{width:9px;height:9px;border-radius:50%;background:#94a3b8}.d.on{background:var(--ok)}
 .ok{color:var(--ok);font-weight:700}.bad{color:var(--bad);font-weight:700}
 #sl{max-height:260px;overflow:auto}
+.ro{display:flex;align-items:center}.ro .qo{flex:1}.btn{display:block;text-align:center;background:#16a34a;color:#fff;text-decoration:none;padding:10px;border-radius:8px;margin:4px 0}
 </style></head><body>
 <header><span>ICTPLUZ Smart Classroom</span><span id="net">Offline</span></header>
 
@@ -35,7 +36,9 @@ video{width:100%;background:#000;border-radius:8px;max-height:60vh}
 <div class="v" id="tDash" hidden><div class="card"><h3>නව පන්තියක්</h3>
 <button onclick="openRoom()">Start Classroom</button>
 <button id="rs" class="g2" onclick="openRoom(localStorage.room)" hidden>පෙර පන්තිය නැවත විවෘත කරන්න</button>
-<button class="o" onclick="auth.signOut()">ඉවත් වන්න</button></div></div>
+<button class="g2" onclick="show('tBuild')">Quiz සාදන්න</button></div>
+<div class="card"><h3>මගේ Quiz</h3><div id="mq"></div></div><div class="card" id="zr" hidden></div>
+<button class="o" onclick="auth.signOut()">ඉවත් වන්න</button></div>
 
 <div class="v" id="tRoom" hidden>
 <div class="g">
@@ -46,12 +49,8 @@ video{width:100%;background:#000;border-radius:8px;max-height:60vh}
 <div class="card"><h3>තිරය Share කිරීම</h3><video id="pv" autoplay muted playsinline></video>
 <div class="row"><button onclick="share()">තිරය Share කරන්න</button><button class="r" onclick="stopShare()">නවත්වන්න</button></div></div>
 <div class="card"><h3>Live ප්‍රශ්නය</h3>
-<input id="qt" placeholder="ප්‍රශ්නය">
-<input class="qo" placeholder="පිළිතුර 1"><input class="qo" placeholder="පිළිතුර 2">
-<input class="qo" placeholder="පිළිතුර 3"><input class="qo" placeholder="පිළිතුර 4">
-<select id="qa"><option value="0">නිවැරදි: 1</option><option value="1">නිවැරදි: 2</option><option value="2">නිවැරදි: 3</option><option value="3">නිවැරදි: 4</option></select>
-<div class="row"><button onclick="sendQ()">සිසුන්ට යවන්න</button><button class="r" onclick="closeQ()">වසා ලකුණු දෙන්න</button></div>
-<div id="res"></div></div></div>
+<button onclick="show('tBuild')">ප්‍රශ්නයක් සාදන්න / යවන්න</button>
+<button class="r" onclick="closeQ()">වසා ලකුණු දෙන්න</button><div id="res"></div></div></div>
 <button class="r" onclick="endClass()">පන්තිය අවසන් කරන්න</button></div>
 
 <div class="v" id="sJoin" hidden><div class="card"><h3>පන්තියට සම්බන්ධ වන්න</h3>
@@ -63,6 +62,19 @@ video{width:100%;background:#000;border-radius:8px;max-height:60vh}
 <div class="card"><video id="vid" autoplay muted playsinline></video><div id="vm">ගුරුවරයා තිරය Share කරන තෙක් රැඳී සිටින්න…</div>
 <button class="g2" onclick="$('vid').requestFullscreen&&$('vid').requestFullscreen()">සම්පූර්ණ තිරය</button></div>
 <div class="card" id="qb">ප්‍රශ්නයක් එනතුරු රැඳී සිටින්න…</div></div>
+
+<div class="v" id="tBuild" hidden><div class="card"><h3>ප්‍රශ්නයක් සාදන්න</h3>
+<select id="qtype" onchange="bType()"><option value="mcq">තනි පිළිතුර (MCQ)</option><option value="tf">සත්‍ය / අසත්‍ය</option><option value="multi">බහු පිළිතුරු</option><option value="text">කෙටි පිළිතුර</option><option value="poll">මත විමසුම (Poll)</option></select>
+<input id="qt" placeholder="ප්‍රශ්නය"><small id="hint"></small><div id="qo"></div>
+<div class="row"><button onclick="sendQ()">Live යවන්න</button><button class="g2" onclick="addQ()">+ Quiz එකට එක් කරන්න</button></div></div>
+<div class="card"><h3>Quiz ලැයිස්තුව</h3><div id="dl"></div><input id="zt" placeholder="Quiz නම"><button onclick="saveQuiz()">සුරකින්න &amp; Share කරන්න</button></div>
+<button class="o" onclick="show(R?'tRoom':'tDash')">← ආපසු</button></div>
+<div class="v" id="tShare" hidden><div class="card" style="text-align:center"><h3>Quiz Share කරන්න</h3>
+<div id="zq" style="display:flex;justify-content:center;padding:8px"></div><small id="zl"></small>
+<button class="g2" onclick="cp('zl')">සබැඳිය පිටපත් කරන්න</button><a id="wa" class="btn" target="_blank" rel="noopener">WhatsApp</a>
+<button class="o" onclick="show('tDash')">← ආපසු</button></div></div>
+<div class="v" id="zJoin" hidden><div class="card"><h3>Quiz එකට සහභාගී වන්න</h3><input id="zn" placeholder="ඔබේ නම" maxlength="30"><button onclick="zStart()">ආරම්භ කරන්න</button></div></div>
+<div class="v" id="zRun" hidden><div class="card"><b id="zh"></b> <span id="zp" style="float:right"></span></div><div class="card" id="zb"></div></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -80,17 +92,19 @@ firebase.initializeApp({
 const auth=firebase.auth(),db=firebase.database();
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const show=id=>['tLogin','tDash','tRoom','sJoin','sRoom'].forEach(x=>$(x).hidden=x!=id);
+const show=id=>['tLogin','tDash','tRoom','sJoin','sRoom','tBuild','tShare','zJoin','zRun'].forEach(x=>$(x).hidden=x!=id);
 const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
 const C0=(new URLSearchParams(location.search).get('c')||'').toUpperCase();
 let R,Q,A={},S={},stream,sid,pcs={},watched={},q0,my,spc;
 
 db.ref('.info/connected').on('value',s=>{$('net').textContent=s.val()?'Online':'Offline';$('net').className=s.val()?'on':''});
 
+const Z0=(new URLSearchParams(location.search).get('z')||'').toUpperCase();
 if(C0){$('sc').value=C0;try{$('sn').value=localStorage.sn||''}catch(e){}show('sJoin')}
+else if(Z0){try{$('zn').value=localStorage.sn||''}catch(e){}show('zJoin')}
 else auth.onAuthStateChanged(u=>{
   const t=u&&!u.isAnonymous;show(t?'tDash':'tLogin');
-  if(t)$('rs').hidden=!localStorage.room;
+  if(t){$('rs').hidden=!localStorage.room;loadMy()}
 });
 ['em','pw'].forEach(i=>$(i).addEventListener('keydown',e=>e.key==='Enter'&&login()));
 
@@ -145,24 +159,113 @@ function watch(id){
         sc.on('child_added',c=>pc.addIceCandidate(JSON.parse(c.val())).catch(()=>{}))}});
   });
 }
+const rid=()=>{const L='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let c='';for(let i=0;i<6;i++)c+=L[Math.floor(Math.random()*L.length)];return c};
+const norm=x=>String(x).trim().toLowerCase();
+const TL={mcq:'MCQ',tf:'සත්‍ය/අසත්‍ය',multi:'බහු පිළිතුරු',text:'කෙටි පිළිතුර',poll:'Poll'};
+const HINT={mcq:'නිවැරදි පිළිතුර ලකුණු කරන්න',tf:'නිවැරදි පිළිතුර ලකුණු කරන්න',multi:'නිවැරදි සියල්ල ලකුණු කරන්න',text:'පිළිගත හැකි පිළිතුරු (ලොකු/කුඩා අකුරු නොගැටේ)',poll:'ලකුණු නැත – අදහස් එකතු කිරීමට පමණි'};
+let draft=[];
+function grade(q,a){
+  if(a==null)return 0;const t=q.t||'mcq';
+  if(t=='poll')return 0;
+  if(t=='text')return q.opts.some(x=>norm(x)==norm(a))?1:0;
+  if(t=='multi')return [...a].sort().join()==[...q.ans].sort().join()?1:0;
+  return a==q.ans?1:0;
+}
+function bType(){
+  const t=$('qtype').value,n=t=='tf'?2:t=='text'?3:4,ck=t=='mcq'||t=='tf'||t=='multi';let h='';
+  for(let i=0;i<n;i++)h+=`<label class="ro">${ck?`<input type="${t=='multi'?'checkbox':'radio'}" name="cr" class="qc" style="width:auto;padding:0;margin:0 8px 0 0">`:''}<input class="qo" placeholder="${t=='text'?'පිළිගන්නා පිළිතුර ':'පිළිතුර '}${i+1}" value="${t=='tf'?(i?'අසත්‍ය':'සත්‍ය'):''}" ${t=='tf'?'readonly':''}></label>`;
+  $('qo').innerHTML=h;$('hint').textContent=HINT[t];
+}
+function readQ(){
+  const t=$('qtype').value,text=$('qt').value.trim(),o=[],c=[];
+  document.querySelectorAll('#qo label').forEach(r=>{const v=r.querySelector('.qo').value.trim(),k=r.querySelector('.qc');if(v){o.push(v);if(k&&k.checked)c.push(o.length-1)}});
+  if(!text||o.length<(t=='text'?1:2)){alert('ප්‍රශ්නය සහ අවම පිළිතුරු සම්පූර්ණ කරන්න');return}
+  const q={t,text,opts:o};
+  if(t=='mcq'||t=='tf'){if(c.length!=1){alert('නිවැරදි පිළිතුර ලකුණු කරන්න');return}q.ans=c[0]}
+  if(t=='multi'){if(!c.length){alert('නිවැරදි පිළිතුරු ලකුණු කරන්න');return}q.ans=c}
+  return q;
+}
 function sendQ(){
-  const o=[...document.querySelectorAll('.qo')].map(i=>i.value.trim()).filter(Boolean),a=+$('qa').value;
-  if(!$('qt').value.trim()||o.length<2)return alert('ප්‍රශ්නය සහ අවම පිළිතුරු 2ක් අවශ්‍යයි');
-  if(a>=o.length)return alert('නිවැරදි පිළිතුර හිස් විකල්පයකි');
-  R.child('answers').remove();R.child('q').set({id:Date.now(),text:$('qt').value.trim(),opts:o,ans:a,open:true});
+  if(!R)return alert('Live යැවීමට පළමුව පන්තියක් ආරම්භ කරන්න');
+  const q=readQ();if(!q)return;
+  R.child('answers').remove();R.child('q').set({...q,id:Date.now(),open:true});$('qt').value='';bType();show('tRoom');
 }
 async function closeQ(){
   if(!Q||!Q.open)return;
   await R.child('q/open').set(false);
-  Object.entries(A).forEach(([id,x])=>{if(x.q==Q.id&&x.i==Q.ans)R.child('students/'+id+'/score').transaction(v=>(v||0)+1)});
+  Object.entries(A).forEach(([id,x])=>{if(x.q==Q.id&&grade(Q,x.a))R.child('students/'+id+'/score').transaction(v=>(v||0)+1)});
 }
 function drawRes(){
   if(!Q){$('res').innerHTML='';return}
-  const n=Object.values(A).filter(x=>x.q==Q.id);
-  $('res').innerHTML=`<p><b>${esc(Q.text)}</b> (පිළිතුරු ${n.length})</p>`+Q.opts.map((o,i)=>{
-    const c=n.filter(x=>x.i==i).length,p=n.length?c*100/n.length:0;
-    return `<div class="bar">${esc(o)}${!Q.open&&i==Q.ans?' ✅':''} — ${c}<i style="width:${p}%"></i></div>`}).join('');
+  const n=Object.values(A).filter(x=>x.q==Q.id),t=Q.t||'mcq';let b;
+  if(t=='text'){const m={};n.forEach(x=>{const k=norm(x.a);m[k]=(m[k]||0)+1});b=Object.entries(m).map(([k,c])=>`<div class="bar">${esc(k)} — ${c}</div>`).join('')}
+  else b=Q.opts.map((o,i)=>{
+    const c=n.filter(x=>t=='multi'?(x.a||[]).includes(i):x.a==i).length,p=n.length?c*100/n.length:0,ok=!Q.open&&t!='poll'&&(t=='multi'?Q.ans.includes(i):i==Q.ans);
+    return `<div class="bar">${esc(o)}${ok?' ✅':''} — ${c}<i style="width:${p}%"></i></div>`}).join('');
+  $('res').innerHTML=`<p><b>${esc(Q.text)}</b> <small>(${TL[t]}) පිළිතුරු ${n.length}</small></p>`+b;
 }
+/* ---- Quiz builder / share ---- */
+function addQ(){const q=readQ();if(!q)return;draft.push(q);$('qt').value='';bType();drawDraft()}
+function drawDraft(){$('dl').innerHTML=draft.map((q,i)=>`<div class="st">${i+1}. ${esc(q.text)} <small>(${TL[q.t]})</small><button class="r" style="width:auto;margin:0 0 0 auto;padding:4px 10px" onclick="draft.splice(${i},1);drawDraft()">✕</button></div>`).join('')||'<small>ප්‍රශ්න තවම නැත</small>'}
+async function saveQuiz(){
+  const ti=$('zt').value.trim();if(!ti||!draft.length)return alert('Quiz නම සහ අවම ප්‍රශ්න 1ක් අවශ්‍යයි');
+  const id=rid(),u=auth.currentUser.uid;
+  try{await db.ref('quizzes/'+id).set({owner:u,title:ti,qs:draft,created:Date.now()});await db.ref('users/'+u+'/quizzes/'+id).set(ti)}
+  catch(e){return alert('සුරැකීම අසාර්ථකයි: '+e.message)}
+  draft=[];$('zt').value='';drawDraft();loadMy();shareQuiz(id);
+}
+function shareQuiz(id){
+  const u=location.origin+location.pathname+'?z='+id;$('zl').textContent=u;$('zq').innerHTML='';
+  new QRCode($('zq'),{text:u,width:200,height:200});$('wa').href='https://wa.me/?text='+encodeURIComponent(u);show('tShare');
+}
+function cp(id){navigator.clipboard.writeText($(id).textContent).then(()=>alert('පිටපත් කරන ලදී ✅'))}
+function loadMy(){
+  db.ref('users/'+auth.currentUser.uid+'/quizzes').once('value').then(s=>{const v=s.val()||{};
+    $('mq').innerHTML=Object.entries(v).map(([id,t])=>`<div class="st">${esc(t)} <small>${id}</small><span style="margin-left:auto;display:flex;gap:6px"><button style="width:auto;margin:0" onclick="shareQuiz('${id}')">Share</button><button class="g2" style="width:auto;margin:0" onclick="results('${id}')">ප්‍රතිඵල</button></span></div>`).join('')||'<small>තවම Quiz නැත</small>'});
+}
+async function results(id){
+  const v=(await db.ref('quizzes/'+id+'/results').once('value')).val()||{};
+  $('zr').hidden=false;$('zr').innerHTML='<h3>ප්‍රතිඵල</h3>'+(Object.values(v).sort((a,b)=>b.score-a.score).map(x=>`<div class="st">${esc(x.name)}<b>${x.score}/${x.total}</b></div>`).join('')||'<small>තවම කිසිවෙක් නැත</small>');
+}
+/* ---- Question renderer (live + self-paced) ---- */
+function drawQ(b,q,my,open,send){
+  const t=q.t||'mcq',has=my!=null;let h=`<b>${esc(q.text)}</b>`;
+  if(open){
+    if(t=='text')h+=`<input id="ta" placeholder="ඔබේ පිළිතුර" ${has?'disabled':''} value="${has?esc(my):''}"><button id="tb" ${has?'disabled':''}>යවන්න</button>`;
+    else if(t=='multi')h+=q.opts.map((o,i)=>`<label class="ro"><input type="checkbox" class="mc" value="${i}" ${has?'disabled':''} ${has&&my.includes(i)?'checked':''} style="width:auto;padding:0;margin:0 8px 0 0">${esc(o)}</label>`).join('')+`<button id="tb" ${has?'disabled':''}>යවන්න</button>`;
+    else h+=q.opts.map((o,i)=>`<button class="o${has&&my==i?' sel':''}" data-i="${i}" ${has?'disabled':''}>${esc(o)}</button>`).join('');
+  }else{
+    const g=grade(q,my);
+    h+=t=='poll'?'<p>ස්තූතියි! 🙏</p>':`<p class="${has?(g?'ok':'bad'):''}">${has?(g?'නිවැරදියි! ✅':'වැරදියි ❌'):'ඔබ පිළිතුරු දුන්නේ නැත'}</p><p>නිවැරදි පිළිතුර: ${esc(t=='text'?q.opts.join(' / '):t=='multi'?q.ans.map(i=>q.opts[i]).join(', '):q.opts[q.ans])}</p>`;
+  }
+  b.innerHTML=h;
+  b.querySelectorAll('button[data-i]').forEach(x=>x.onclick=()=>send(+x.dataset.i));
+  const tb=b.querySelector('#tb');
+  if(tb&&!has)tb.onclick=()=>{const v=t=='text'?b.querySelector('#ta').value.trim():[...b.querySelectorAll('.mc:checked')].map(x=>+x.value);if(t=='text'?v:v.length)send(v)};
+}
+/* ---- Self-paced quiz (student) ---- */
+let Z,ZQ,zi=0,zans=[];
+async function zStart(){
+  const name=$('zn').value.trim().slice(0,30);if(!name)return alert('නම අවශ්‍යයි');
+  try{sid=(await auth.signInAnonymously()).user.uid;Z=(await db.ref('quizzes/'+Z0).once('value')).val()}
+  catch(e){return alert('සම්බන්ධ විය නොහැක: '+e.message)}
+  if(!Z)return alert('Quiz එක හමු නොවීය');
+  try{localStorage.sn=name}catch(e){}
+  ZQ=Z.qs;zi=0;zans=[];$('zh').textContent=Z.title;show('zRun');zShow();
+}
+function zShow(){
+  const q=ZQ[zi],b=$('zb'),a=zans[zi],done=a!==undefined;
+  $('zp').textContent=(zi+1)+' / '+ZQ.length;
+  drawQ(b,q,done?a:null,!done,v=>{zans[zi]=v;zShow()});
+  if(done){b.insertAdjacentHTML('beforeend',`<button id="zx">${zi+1<ZQ.length?'ඊළඟ ප්‍රශ්නය →':'අවසන් කරන්න'}</button>`);
+    $('zx').onclick=()=>{if(zi+1<ZQ.length){zi++;zShow()}else zEnd()}}
+}
+async function zEnd(){
+  const sc=ZQ.reduce((n,q,i)=>n+grade(q,zans[i]),0),tot=ZQ.filter(q=>q.t!='poll').length;
+  $('zb').innerHTML=`<h2>ඔබේ ලකුණු: ${sc} / ${tot} 🎉</h2>`;$('zp').textContent='✅';
+  try{await db.ref('quizzes/'+Z0+'/results/'+sid).set({name:$('zn').value.trim().slice(0,30),score:sc,total:tot,t:Date.now()})}catch(e){}
+}
+bType();drawDraft();
 function endClass(){
   if(!confirm('පන්තිය අවසන් කරන්නද? සියලු දත්ත මැකෙනු ඇත.'))return;
   stopShare();R.remove();localStorage.removeItem('room');R.off();R=null;watched={};A={};S={};Q=null;
@@ -171,14 +274,8 @@ function endClass(){
 
 /* ---------- සිසුවා ---------- */
 function renderQ(){
-  const q=q0,b=$('qb');
-  if(!q){b.textContent='ප්‍රශ්නයක් එනතුරු රැඳී සිටින්න…';return}
-  const mine=my&&my.q==q.id;let h=`<b>${esc(q.text)}</b>`;
-  if(q.open)h+=q.opts.map((o,i)=>`<button class="o${mine&&my.i==i?' sel':''}" data-i="${i}" ${mine?'disabled':''}>${esc(o)}</button>`).join('');
-  else{const ok=mine&&my.i==q.ans;
-    h+=`<p class="${mine?(ok?'ok':'bad'):''}">${mine?(ok?'නිවැරදියි! ✅ +1':'වැරදියි ❌'):'ඔබ පිළිතුරු දුන්නේ නැත'}</p><p>නිවැරදි පිළිතුර: ${esc(q.opts[q.ans])}</p>`}
-  b.innerHTML=h;
-  b.querySelectorAll('button[data-i]').forEach(x=>x.onclick=()=>R.child('answers/'+sid).set({q:q.id,i:+x.dataset.i}));
+  const q=q0;if(!q){$('qb').textContent='ප්‍රශ්නයක් එනතුරු රැඳී සිටින්න…';return}
+  drawQ($('qb'),q,my&&my.q==q.id?my.a:null,q.open,a=>R.child('answers/'+sid).set({q:q.id,a}));
 }
 async function sJoin(){
   const code=$('sc').value.trim().toUpperCase(),name=$('sn').value.trim().slice(0,30);if(!code||!name)return alert('කේතය සහ නම අවශ්‍යයි');
