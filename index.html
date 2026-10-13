@@ -41,7 +41,6 @@ button:hover { filter: brightness(1.1); }
 button.r { background: var(--bad); }
 button.g2 { background: rgba(148, 163, 184, 0.2); color: var(--text-main); }
 button.o { background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); text-align: left; }
-button.o.sel { border: 2px solid var(--primary); background: rgba(79,70,229,0.15); }
 .g { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
 @media(max-width:768px){ .g { grid-template-columns: 1fr; } }
 .row { display: flex; gap: 10px; }
@@ -98,10 +97,13 @@ footer a { color: var(--accent); text-decoration: none; }
     <button onclick="goJoin()">Join Class 🚀</button>
   </div>
   <div class="card">
-    <h3>ගුරු පිවිසුම</h3>
-    <input id="em" type="email" placeholder="Email">
-    <input id="pw" type="password" placeholder="මුරපදය">
-    <button onclick="login()">පිවිසෙන්න</button>
+    <h3>ගුරු පිවිසුම / ගිණුමක් සෑදීම</h3>
+    <input id="em" type="email" placeholder="Email" autocomplete="username">
+    <input id="pw" type="password" placeholder="මුරපදය (අවම අක්ෂර 6ක්)" autocomplete="current-password">
+    <div class="row">
+      <button onclick="login()">පිවිසෙන්න (Login)</button>
+      <button class="g2" onclick="register()">ගිණුමක් සාදන්න (Sign Up)</button>
+    </div>
   </div>
 </div>
 
@@ -294,7 +296,7 @@ function playSound(type) {
   }
 }
 
-/* Highly Reliable QR Code Generator using Google Charts API */
+/* QR Code Generator using API */
 function makeQR(el, text, size) {
   try {
     el.innerHTML = '';
@@ -365,7 +367,23 @@ else {
   });
 }
 
-function login(){auth.signInWithEmailAndPassword($('em').value.trim(),$('pw').value).catch(e=>alert('පිවිසීම අසාර්ථකයි: '+e.message))}
+/* Teacher Authentication Functions */
+function login(){
+  const email = $('em').value.trim();
+  const password = $('pw').value;
+  if(!email || !password) return alert('කරුණාකර Email සහ මුරපදය ඇතුළත් කරන්න.');
+  auth.signInWithEmailAndPassword(email, password)
+    .catch(e => alert('පිවිසීම අසාර්ථකයි: ' + e.message));
+}
+
+function register(){
+  const email = $('em').value.trim();
+  const password = $('pw').value;
+  if(!email || !password) return alert('ගිණුමක් සෑදීමට Email සහ මුරපදය ඇතුළත් කරන්න.');
+  auth.createUserWithEmailAndPassword(email, password)
+    .then(() => alert('ගිණුම සාර්ථකව සාදන ලදී! 🎉'))
+    .catch(e => alert('ගිණුම් සෑදීම අසාර්ථකයි: ' + e.message));
+}
 
 async function openRoom(old){
   let c=old;
@@ -417,7 +435,7 @@ async function share(){
     stream.getVideoTracks()[0].onended=stopShare;
     R.child('sharing').set(true);
   }catch(e){
-    alert('තිරය Share කිරීමට අවසර නැත හෝ Browser එක මඟින් Block කර ඇත.');
+    alert('තිරය Share කිරීමට අවසර නැත.');
   }
 }
 
@@ -514,7 +532,6 @@ function drawRes(){
   if(t!=='draw')$('res').innerHTML=`<p><b>${esc(Q.text)}</b> <small>(${TL[t]}) පිළිතුරු ${n.length}</small></p>`+b;
 }
 
-/* Canvas Drawing Logic for Students */
 let canvas, ctx, drawing = false;
 function initCanvas(){
   const container = $('canvas-container');
@@ -597,7 +614,6 @@ function drawQ(b,q,my,open,send){
   };
 }
 
-/* Student Live Connection */
 function renderQ(){
   const q=q0;if(!q){$('qb').textContent='ප්‍රශ්නයක් එනතුරු රැඳී සිටින්න…';return}
   drawQ($('qb'),q,my&&my.q==q.id?my.a:null,q.open,a=>R.child('answers/'+sid).set({q:q.id,a,uid:sid}));
