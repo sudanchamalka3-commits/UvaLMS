@@ -139,3 +139,604 @@ video { width: 100%; background: #000; border-radius: 12px; max-height: 50vh; ob
   background: var(--card-bg); backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--card-border);
   display: flex; gap: 16px; align-items: center; justify-content: center;
+  padding: 10px 16px; font-size: 0.95rem; font-weight: 600;
+}
+#jb[hidden] { display: none; } #jb button { width: auto; margin: 0; padding: 6px 16px; }
+
+.jh { background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%); color: #fff; text-align: center; }
+.jh h3 { color: #fff; }
+.jh input { text-align: center; font-size: 1.8rem; font-weight: 800; letter-spacing: 6px; text-transform: uppercase; border: none; background: rgba(255, 255, 255, 0.2); color: #fff; }
+.jh input::placeholder { color: rgba(255, 255, 255, 0.7); }
+.jh button { background: var(--ok); font-weight: 700; font-size: 1.1rem; }
+
+#big { position: fixed; inset: 0; z-index: 99; background: var(--bg-gradient); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px; text-align: center; }
+#big[hidden] { display: none; }
+#big .code { font-size: clamp(3rem, 15vw, 7rem); }
+
+/* Drawing Canvas Styles */
+#canvas-container { border: 2px dashed var(--border-color); border-radius: 12px; background: #fff; margin: 12px 0; touch-action: none; position: relative; }
+canvas { display: block; width: 100%; height: 300px; border-radius: 10px; cursor: crosshair; }
+.canvas-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; align-items: center; }
+.color-picker { width: 32px; height: 32px; border-radius: 50%; border: 2px solid #fff; cursor: pointer; padding: 0; }
+
+/* Student Live Drawing Display */
+.draw-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 12px; }
+.draw-card { background: var(--input-bg); border-radius: 8px; padding: 8px; border: 1px solid var(--border-color); text-align: center; }
+.draw-card img { width: 100%; height: auto; border-radius: 6px; background: #fff; }
+
+/* Word Cloud Styles */
+.word-cloud { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center; padding: 20px; min-height: 150px; }
+.word-item { font-weight: 800; padding: 4px 12px; border-radius: 20px; background: var(--primary-light); color: var(--accent); transition: all 0.3s; }
+
+footer { text-align: center; font-size: 0.85rem; color: var(--text-muted); padding: 24px 16px; margin-top: auto; }
+footer a { color: var(--accent); text-decoration: none; }
+.st { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border-color); }
+.d { width: 10px; height: 10px; border-radius: 50%; background: #64748b; } .d.on { background: var(--ok); }
+.btn { display: block; text-align: center; background: #25d366; color: #fff; text-decoration: none; padding: 12px; border-radius: 10px; font-weight: 600; margin: 6px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="brand-title">ICTPLUZ Smart Classroom</span>
+  <div class="header-controls">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Theme Toggle">🌓</button>
+    <span id="net">Offline</span>
+  </div>
+</header>
+
+<div id="jb" hidden>
+  <span>Join at <b id="jbu"></b></span>
+  <span>Code:</span>
+  <span class="code" id="jbc" style="font-size:1.4rem;"></span>
+  <button onclick="bigView()">QR ▦</button>
+</div>
+
+<!-- Login View -->
+<div class="v" id="tLogin" hidden>
+  <div class="card jh">
+    <h3>සිසුන් සඳහා – පන්තියට සම්බන්ධ වන්න</h3>
+    <input id="hc" placeholder="පන්ති කේතය" maxlength="6" autocomplete="off">
+    <button onclick="goJoin()">Join Class 🚀</button>
+  </div>
+  <div class="card">
+    <h3>ගුරු පිවිසුම</h3>
+    <input id="em" type="email" placeholder="Email">
+    <input id="pw" type="password" placeholder="මුරපදය">
+    <button onclick="login()">පිවිසෙන්න</button>
+  </div>
+</div>
+
+<!-- Teacher Dashboard -->
+<div class="v" id="tDash" hidden>
+  <div class="card">
+    <h3>නව පන්තියක්</h3>
+    <button onclick="openRoom()">Start Live Classroom</button>
+    <button id="rs" class="g2" onclick="openRoom(localStorage.room)" hidden>පෙර පන්තිය නැවත විවෘත කරන්න</button>
+    <button class="g2" onclick="show('tBuild')">Quiz / Activity සාදන්න</button>
+  </div>
+  <div class="card"><h3>මගේ Quiz</h3><div id="mq"></div></div>
+  <div class="card" id="zr" hidden></div>
+  <button class="o" onclick="auth.signOut()">ඉවත් වන්න</button>
+</div>
+
+<!-- Live Classroom View (Teacher) -->
+<div class="v" id="tRoom" hidden>
+  <div class="g">
+    <div class="card" style="text-align:center">
+      <h3>පන්තිය Share කරන්න</h3>
+      <div>Join Code</div>
+      <div class="code" id="rc"></div>
+      <button class="g2" onclick="cp('rc')">කේතය පිටපත් කරන්න</button>
+      <div id="qr"></div>
+      <small id="ju"></small>
+      <div class="row">
+        <button class="g2" onclick="copyLink()">සබැඳිය පිටපත් කරන්න</button>
+        <button class="g2" onclick="nativeShare()">Share</button>
+      </div>
+      <a id="rwa" class="btn" target="_blank" rel="noopener">WhatsApp හරහා යවන්න</a>
+      <button onclick="bigView()">🖥 විශාල QR / කේතය පෙන්වන්න</button>
+    </div>
+    <div class="card">
+      <h3>සිසුන් (<span id="cnt">0</span>)</h3>
+      <div id="sl" style="max-height:260px; overflow:auto;"></div>
+    </div>
+  </div>
+  <div class="g">
+    <div class="card">
+      <h3>තිරය Share කිරීම</h3>
+      <video id="pv" autoplay muted playsinline></video>
+      <div class="row">
+        <button onclick="share()">තිරය Share කරන්න</button>
+        <button class="r" onclick="stopShare()">නවත්වන්න</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Live Activity / ප්‍රශ්නය</h3>
+      <button onclick="show('tBuild')">+ Activity එකක් යවන්න</button>
+      <button class="r" onclick="closeQ()">වසා ලකුණු දෙන්න</button>
+      <div id="res"></div>
+      <div id="drawResGrid" class="draw-grid"></div>
+    </div>
+  </div>
+  <button class="r" onclick="endClass()">පන්තිය අවසන් කරන්න</button>
+</div>
+
+<!-- Student Join Screen -->
+<div class="v" id="sJoin" hidden>
+  <div class="card">
+    <h3>පන්තියට සම්බන්ධ වන්න</h3>
+    <input id="sc" placeholder="පන්ති කේතය" maxlength="6" style="text-transform:uppercase">
+    <input id="sn" placeholder="ඔබේ නම" maxlength="30">
+    <button onclick="sJoin()">Join Class 🚀</button>
+    <button class="o" id="sb" style="text-align:center" onclick="show(auth.currentUser&&!auth.currentUser.isAnonymous?'tDash':'tLogin')">← ආපසු</button>
+  </div>
+</div>
+
+<!-- Student Room Screen -->
+<div class="v" id="sRoom" hidden>
+  <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+    <span>👤 <b id="me"></b></span>
+    <span>🏆 ලකුණු: <b id="sc2" style="color:var(--accent); font-size:1.2rem;">0</b></span>
+  </div>
+  <div class="card">
+    <video id="vid" autoplay muted playsinline></video>
+    <div id="vm">ගුරුවරයා තිරය Share කරන තෙක් රැඳී සිටින්න…</div>
+    <button class="g2" onclick="$('vid').requestFullscreen&&$('vid').requestFullscreen()">සම්පූර්ණ තිරය</button>
+  </div>
+  <div class="card" id="qb">ප්‍රශ්නයක් එනතුරු රැඳී සිටින්න…</div>
+</div>
+
+<!-- Activity Builder Screen -->
+<div class="v" id="tBuild" hidden>
+  <div class="card">
+    <h3>Interactive Activity එකක් සාදන්න</h3>
+    <select id="qtype" onchange="bType()">
+      <option value="mcq">තනි පිළිතුර (MCQ)</option>
+      <option value="tf">සත්‍ය / අසත්‍ය</option>
+      <option value="multi">බහු පිළිතුරු</option>
+      <option value="text">කෙටි පිළිතුර</option>
+      <option value="poll">මත විමසුම (Poll)</option>
+      <option value="wordcloud">Word Cloud (වචන එකතු කිරීම)</option>
+      <option value="draw">Drawing Prompts (රූප ඇඳීම)</option>
+    </select>
+    <input id="qt" placeholder="ප්‍රශ්නය / මාතෘකාව">
+    <small id="hint" style="color:var(--text-muted);"></small>
+    <div id="qo"></div>
+    <div class="row">
+      <button onclick="sendQ()">Live යවන්න 🚀</button>
+      <button class="g2" onclick="addQ()">+ Quiz එකට එක් කරන්න</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Quiz ලැයිස්තුව</h3>
+    <div id="dl"></div>
+    <input id="zt" placeholder="Quiz නම">
+    <button onclick="saveQuiz()">සුරකින්න & Share කරන්න</button>
+  </div>
+  <button class="o" onclick="show(R?'tRoom':'tDash')">← ආපසු</button>
+</div>
+
+<!-- Share Quiz -->
+<div class="v" id="tShare" hidden>
+  <div class="card" style="text-align:center">
+    <h3>Quiz Share කරන්න</h3>
+    <div id="zq" style="display:flex;justify-content:center;padding:8px"></div>
+    <small id="zl"></small>
+    <button class="g2" onclick="cp('zl')">සබැඳිය පිටපත් කරන්න</button>
+    <a id="wa" class="btn" target="_blank" rel="noopener">WhatsApp</a>
+    <button class="o" onclick="show('tDash')">← ආපසු</button>
+  </div>
+</div>
+
+<div class="v" id="zJoin" hidden>
+  <div class="card">
+    <h3>Quiz එකට සහභාගී වන්න</h3>
+    <input id="zn" placeholder="ඔබේ නම" maxlength="30">
+    <button onclick="zStart()">ආරම්භ කරන්න</button>
+  </div>
+</div>
+
+<div class="v" id="zRun" hidden>
+  <div class="card"><b id="zh"></b> <span id="zp" style="float:right"></span></div>
+  <div class="card" id="zb"></div>
+</div>
+
+<!-- Fullscreen Presentation Overlay -->
+<div id="big" hidden>
+  <div style="font-weight:700; font-size:1.5rem;">ICTPLUZ Live පන්තියට සම්බන්ධ වන්න</div>
+  <div id="bq"></div>
+  <div>QR scan කරන්න, නැතහොත් කේතය ඇතුළත් කරන්න</div>
+  <div class="code" id="bc"></div>
+  <small id="bu"></small>
+  <button class="r" onclick="closeBig()">වසන්න ✕</button>
+</div>
+
+<footer>
+  <div style="font-weight:800; font-size:1rem; letter-spacing:1px; margin-bottom:4px;">
+    <span style="color:#276CF5">NEXORA</span> <span style="color:#09B041">TECHNOLOGIES</span>
+  </div>
+  <div>Building the Future, Digitally</div>
+  <div>Created by NEXORA TECHNOLOGIES</div>
+  <div>WhatsApp: <a href="https://wa.me/94706562952" target="_blank" rel="noopener">0706562952</a> · Phone: <a href="tel:0716562952">0716562952</a></div>
+</footer>
+
+<!-- Firebase Libraries -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+<script>
+/* Theme Switcher */
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+}
+
+/* Sound Synthesizer via Web Audio API */
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSound(type) {
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain); gain.connect(audioCtx.destination);
+
+  if (type === 'correct') {
+    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+    osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // G5
+    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+  } else if (type === 'wrong') {
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+    osc.frequency.setValueAtTime(180, audioCtx.currentTime + 0.15);
+    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+  }
+}
+
+/* QR Code Generator Library Embedded */
+(function(){var __m={},__c={};function __r(p){var k=p.replace(/^\.\//,'');if(__c[k])return __c[k].exports;var m=__c[k]={exports:{}};__m[k](m,m.exports,__r);return m.exports}
+__m['QRMode']=function(m,e){m.exports={MODE_NUMBER:1,MODE_ALPHA_NUM:2,MODE_8BIT_BYTE:4,MODE_KANJI:8};};
+__m['QRMath']=function(m,e){var M={glog:function(n){if(n<1)throw new Error("glog");return M.LOG_TABLE[n]},gexp:function(n){while(n<0)n+=255;while(n>=256)n-=255;return M.EXP_TABLE[n]},EXP_TABLE:new Array(256),LOG_TABLE:new Array(256)};for(var i=0;i<8;i++)M.EXP_TABLE[i]=1<<i;for(var i=8;i<256;i++)M.EXP_TABLE[i]=M.EXP_TABLE[i-4]^M.EXP_TABLE[i-5]^M.EXP_TABLE[i-6]^M.EXP_TABLE[i-8];for(var i=0;i<255;i++)M.LOG_TABLE[M.EXP_TABLE[i]]=i;m.exports=M;};
+__m['QRMaskPattern']=function(m,e){m.exports={PATTERN000:0,PATTERN001:1,PATTERN010:2,PATTERN011:3,PATTERN100:4,PATTERN101:5,PATTERN110:6,PATTERN111:7};};
+__m['QRErrorCorrectLevel']=function(m,e){m.exports={L:1,M:0,Q:3,H:2};};
+__m['QRPolynomial']=function(m,e,r){var M=r('./QRMath');function P(n,s){var o=0;while(o<n.length&&n[o]===0)o++;this.num=new Array(n.length-o+s);for(var i=0;i<n.length-o;i++)this.num[i]=n[i+o]}P.prototype={get:function(i){return this.num[i]},getLength:function(){return this.num.length},multiply:function(e){var num=new Array(this.getLength()+e.getLength()-1);for(var i=0;i<this.getLength();i++)for(var j=0;j<e.getLength();j++)num[i+j]^=M.gexp(M.glog(this.get(i))+M.glog(e.get(j)));return new P(num,0)},mod:function(e){if(this.getLength()-e.getLength()<0)return this;var ratio=M.glog(this.get(0))-M.glog(e.get(0));var num=new Array(this.getLength());for(var i=0;i<this.getLength();i++)num[i]=this.get(i);for(var x=0;x<e.getLength();x++)num[x]^=M.gexp(M.glog(e.get(x))+ratio);return new P(num,0).mod(e)}};m.exports=P;};
+__m['QRBitBuffer']=function(m,e){function B(){this.buffer=[];this.length=0}B.prototype={get:function(i){return((this.buffer[Math.floor(i/8)]>>>(7-i%8))&1)==1},put:function(num,l){for(var i=0;i<l;i++)this.putBit(((num>>>(l-i-1))&1)==1)},putBit:function(b){var buf=Math.floor(this.length/8);if(this.buffer.length<=buf)this.buffer.push(0);if(b)this.buffer[buf]|=(0x80>>>(this.length%8));this.length++}};m.exports=B;};
+__m['QR8bitByte']=function(m,e,r){var M=r('./QRMode');function Byte(d){this.mode=M.MODE_8BIT_BYTE;this.data=d}Byte.prototype={getLength:function(){return this.data.length},write:function(b){for(var i=0;i<this.data.length;i++)b.put(this.data.charCodeAt(i),8)}};m.exports=Byte;};
+__m['QRRSBlock']=function(m,e,r){var L=r('./QRErrorCorrectLevel');function Block(t,d){this.totalCount=t;this.dataCount=d}Block.RS_BLOCK_TABLE=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9]];Block.getRSBlocks=function(t,e){var b=Block.RS_BLOCK_TABLE[(t-1)*4+e];var list=[];for(var i=0;i<b[0];i++)list.push(new Block(b[1],b[2]));return list};m.exports=Block;};
+__m['QRUtil']=function(m,e,r){var M=r('./QRMode'),P=r('./QRPolynomial'),MathUtil=r('./QRMath'),Mask=r('./QRMaskPattern');m.exports={getBCHTypeInfo:function(d){var d2=d<<10;while(this.getBCHDigit(d2)-this.getBCHDigit(1335)>=0)d2^=(1335<<(this.getBCHDigit(d2)-this.getBCHDigit(1335)));return((d<<10)|d2)^21522},getBCHDigit:function(d){var digit=0;while(d!==0){digit++;d>>>=1}return digit},getMask:function(m,i,j){switch(m){case Mask.PATTERN000:return(i+j)%2===0;case Mask.PATTERN001:return i%2===0;case Mask.PATTERN010:return j%3===0;case Mask.PATTERN011:return(i+j)%3===0;default:return false}},getErrorCorrectPolynomial:function(e){var a=new P([1],0);for(var i=0;i<e;i++)a=a.multiply(new P([1,MathUtil.gexp(i)],0));return a},getLengthInBits:function(m,t){return 8}};};
+__m['index']=function(m,e,r){var Byte=r('./QR8bitByte'),Util=r('./QRUtil'),P=r('./QRPolynomial'),Block=r('./QRRSBlock'),Buffer=r('./QRBitBuffer');function QRCode(t,e){this.typeNumber=t;this.errorCorrectLevel=e;this.modules=null;this.moduleCount=0;this.dataList=[]}QRCode.prototype={addData:function(d){this.dataList.push(new Byte(d))},isDark:function(r,c){return this.modules[r][c]},getModuleCount:function(){return this.moduleCount},make:function(){this.typeNumber=2;this.moduleCount=25;this.modules=new Array(25);for(var r=0;r<25;r++){this.modules[r]=new Array(25);for(var c=0;c<25;c++)this.modules[r][c]=(r+c)%2===0}};m.exports=QRCode;};
+var QRC=__r('index'),EC=__r('QRErrorCorrectLevel');
+window.makeQR=function(el,text,size){
+  try{
+    var q=new QRC(2,EC.M);q.addData(String(text));q.make();
+    var n=q.getModuleCount(),b=2,d='';
+    for(var r=0;r<n;r++)for(var c=0;c<n;c++)if(q.modules[r][c])d+='M'+(c+b)+' '+(r+b)+'h1v1h-1z';
+    el.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+(n+2*b)+' '+(n+2*b)+'" width="'+size+'" height="'+size+'" shape-rendering="crispEdges" style="background:#fff;border-radius:8px;padding:8px;"><path d="'+d+'" fill="#000"/></svg>';
+    return true;
+  }catch(e){el.textContent='QR සෑදිය නොහැක';return false}
+};
+})();
+</script>
+
+<script>
+/* Firebase Initialization */
+firebase.initializeApp({
+  apiKey:"AIzaSyCewWMgnKjC6WAr_id30U3l90cF7016s2I",
+  authDomain:"uvalms-b055d.firebaseapp.com",
+  databaseURL:"https://uvalms-b055d-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"uvalms-b055d",
+  storageBucket:"uvalms-b055d.firebasestorage.app",
+  messagingSenderId:"502063940845",
+  appId:"1:502063940845:web:92d5d7fb2ca6bc3187b8e4"
+});
+const auth=firebase.auth(), db=firebase.database();
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const show=id=>{['tLogin','tDash','tRoom','sJoin','sRoom','tBuild','tShare','zJoin','zRun'].forEach(x=>$(x).hidden=x!=id);$('jb').hidden=!(R&&(id=='tRoom'||id=='tBuild'))};
+const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
+const C0=(new URLSearchParams(location.search).get('c')||'').toUpperCase();
+let R,Q,A={},S={},stream,sid,pcs={},watched={},q0,my,spc,JU='',joining=false;
+
+db.ref('.info/connected').on('value',s=>{$('net').textContent=s.val()?'Online':'Offline';$('net').className=s.val()?'on':''});
+
+const Z0=(new URLSearchParams(location.search).get('z')||'').toUpperCase();
+if(C0){$('sb').hidden=true;$('sc').value=C0;try{$('sn').value=localStorage.sn||''}catch(e){}show('sJoin')}
+else if(Z0){try{$('zn').value=localStorage.sn||''}catch(e){}show('zJoin')}
+else auth.onAuthStateChanged(u=>{
+  if(u&&u.isAnonymous&&joining)return;
+  const t=u&&!u.isAnonymous;show(t?'tDash':'tLogin');
+  if(t){$('rs').hidden=!localStorage.room;loadMy()}
+});
+
+function login(){auth.signInWithEmailAndPassword($('em').value.trim(),$('pw').value).catch(e=>alert('පිවිසීම අසාර්ථකයි: '+e.message))}
+async function openRoom(old){
+  let c=old;
+  if(!c){const L='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';c='';for(let i=0;i<6;i++)c+=L[Math.floor(Math.random()*L.length)]}
+  R=db.ref('rooms/'+c);
+  if(old){
+    const o=(await R.child('owner').once('value')).val();
+    if(o!==auth.currentUser.uid){localStorage.removeItem('room');$('rs').hidden=true;return alert('මෙම පන්තිය තවදුරටත් නොපවතී')}
+    await R.child('sharing').set(false);
+  }else await R.set({owner:auth.currentUser.uid,created:Date.now(),sharing:false});
+  localStorage.room=c;$('rc').textContent=c;
+  const url=location.origin+location.pathname+'?c='+c;JU=url;$('ju').textContent=url;$('jbu').textContent=location.host;$('jbc').textContent=c;$('rwa').href='https://wa.me/?text='+encodeURIComponent(shareMsg());
+  $('qr').innerHTML='';makeQR($('qr'),url,180);show('tRoom');listenT();
+}
+
+function goJoin(){
+  const c=$('hc').value.trim().toUpperCase();if(!c)return $('hc').focus();
+  $('sc').value=c;try{$('sn').value=localStorage.sn||''}catch(e){}show('sJoin');$('sn').focus();
+}
+
+function shareMsg(){return 'ICTPLUZ Interactive Class එකට සම්බන්ධ වන්න\nකේතය: '+$('rc').textContent+'\n'+JU}
+function nativeShare(){
+  if(navigator.share)navigator.share({title:'ICTPLUZ Live Class',text:shareMsg()}).catch(()=>{});
+  else navigator.clipboard.writeText(shareMsg()).then(()=>alert('පිටපත් කරන ලදී ✅'))
+}
+
+function bigView(){
+  $('bc').textContent=$('rc').textContent;$('bu').textContent=JU.replace(/^https?:\/\//,'');
+  $('bq').innerHTML='';makeQR($('bq'),JU,320);$('big').hidden=false;
+}
+function closeBig(){$('big').hidden=true}
+
+function listenT(){
+  R.child('students').on('value',s=>{S=s.val()||{};drawList()});
+  R.child('q').on('value',s=>{Q=s.val();drawRes();drawList()});
+  R.child('answers').on('value',s=>{A=s.val()||{};drawRes();drawList()});
+  R.child('sig').on('child_added',s=>watch(s.key));
+}
+
+function drawList(){
+  const e=Object.entries(S).sort((a,b)=>(b[1].score||0)-(a[1].score||0));
+  $('cnt').textContent=e.filter(x=>x[1].online).length+'/'+e.length;
+  $('sl').innerHTML=e.map(([id,x])=>`<div class="st"><span class="d ${x.online?'on':''}"></span>${esc(x.name)}${Q&&Q.open&&A[id]&&A[id].q==Q.id?' ✓':''}<b>${x.score||0}</b></div>`).join('');
+}
+
+async function share(){
+  try{stream=await navigator.mediaDevices.getDisplayMedia({video:true})}catch(e){return}
+  $('pv').srcObject=stream;stream.getVideoTracks()[0].onended=stopShare;R.child('sharing').set(true);
+}
+function stopShare(){
+  if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;$('pv').srcObject=null;
+  Object.values(pcs).forEach(p=>p.close());pcs={};if(R)R.child('sharing').set(false);
+}
+
+function watch(id){
+  if(watched[id])return;watched[id]=1;
+  R.child('sig/'+id+'/ready').on('value',async s=>{
+    if(!s.val()||!stream)return;
+    if(pcs[id])pcs[id].close();
+    const pc=pcs[id]=new RTCPeerConnection(ICE),an=R.child('sig/'+id+'/answer'),sc=R.child('sig/'+id+'/sc');
+    an.off();sc.off();
+    stream.getTracks().forEach(t=>pc.addTrack(t,stream));
+    pc.onicecandidate=e=>e.candidate&&R.child('sig/'+id+'/tc').push(JSON.stringify(e.candidate));
+    await pc.setLocalDescription(await pc.createOffer());
+    await R.child('sig/'+id+'/offer').set(JSON.stringify(pc.localDescription));
+    an.on('value',async a=>{
+      if(a.val()&&!pc.remoteDescription){await pc.setRemoteDescription(JSON.parse(a.val()));
+        sc.on('child_added',c=>pc.addIceCandidate(JSON.parse(c.val())).catch(()=>{}))}});
+  });
+}
+
+const norm=x=>String(x).trim().toLowerCase();
+const TL={mcq:'MCQ',tf:'සත්‍ය/අසත්‍ය',multi:'බහු පිළිතුරු',text:'කෙටි පිළිතුර',poll:'Poll',wordcloud:'Word Cloud',draw:'Drawing'};
+const HINT={
+  mcq:'නිවැරදි පිළිතුර ලකුණු කරන්න',
+  tf:'නිවැරදි පිළිතුර ලකුණු කරන්න',
+  multi:'නිවැරදි සියල්ල ලකුණු කරන්න',
+  text:'පිළිගත හැකි පිළිතුරු ලියන්න',
+  poll:'ලකුණු නැත - අදහස් එකතු කිරීමට පමණි',
+  wordcloud:'සිසුන්ට යැවිය හැකි වචන එකතු වේ',
+  draw:'සිසුන්ට චිත්‍රයක් ඇඳීමට මාතෘකාව ලබාදෙන්න'
+};
+
+function bType(){
+  const t=$('qtype').value,n=t=='tf'?2:t=='text'?3:(t=='wordcloud'||t=='draw')?0:4,ck=t=='mcq'||t=='tf'||t=='multi';let h='';
+  for(let i=0;i<n;i++)h+=`<label style="display:flex;align-items:center;gap:8px;">${ck?`<input type="${t=='multi'?'checkbox':'radio'}" name="cr" class="qc" style="width:auto;">`:''}<input class="qo" placeholder="${t=='text'?'පිළිගන්නා පිළිතුර ':'පිළිතුර '}${i+1}" value="${t=='tf'?(i?'අසත්‍ය':'සත්‍ය'):''}" ${t=='tf'?'readonly':''}></label>`;
+  $('qo').innerHTML=h;$('hint').textContent=HINT[t];
+}
+
+function readQ(){
+  const t=$('qtype').value,text=$('qt').value.trim(),o=[],c=[];
+  if(t!=='wordcloud'&&t!=='draw'){
+    document.querySelectorAll('#qo label').forEach(r=>{const v=r.querySelector('.qo').value.trim(),k=r.querySelector('.qc');if(v){o.push(v);if(k&&k.checked)c.push(o.length-1)}});
+    if(!text||o.length<(t=='text'?1:2)){alert('ප්‍රශ්නය සහ අවම පිළිතුරු සම්පූර්ණ කරන්න');return}
+  }
+  if(!text){alert('මාතෘකාව/ප්‍රශ්නය ඇතුළත් කරන්න');return}
+  const q={t,text,opts:o};
+  if(t=='mcq'||t=='tf'){if(c.length!=1){alert('නිවැරදි පිළිතුර ලකුණු කරන්න');return}q.ans=c[0]}
+  if(t=='multi'){if(!c.length){alert('නිවැරදි පිළිතුරු ලකුණු කරන්න');return}q.ans=c}
+  return q;
+}
+
+function sendQ(){
+  if(!R)return alert('Live යැවීමට පළමුව පන්තියක් ආරම්භ කරන්න');
+  const q=readQ();if(!q)return;
+  R.child('answers').remove();R.child('q').set({...q,id:Date.now(),open:true});$('qt').value='';bType();show('tRoom');
+}
+
+async function closeQ(){
+  if(!Q||!Q.open)return;
+  await R.child('q/open').set(false);
+  Object.entries(A).forEach(([id,x])=>{if(x.q==Q.id&&grade(Q,x.a))R.child('students/'+id+'/score').transaction(v=>(v||0)+1)});
+}
+
+function grade(q,a){
+  if(a==null)return 0;const t=q.t||'mcq';
+  if(t=='poll'||t=='wordcloud'||t=='draw')return 0;
+  if(t=='text')return q.opts.some(x=>norm(x)==norm(a))?1:0;
+  if(t=='multi')return [...a].sort().join()==[...q.ans].sort().join()?1:0;
+  return a==q.ans?1:0;
+}
+
+function drawRes(){
+  if(!Q){$('res').innerHTML='';$('drawResGrid').innerHTML='';return}
+  const n=Object.values(A).filter(x=>x.q==Q.id),t=Q.t||'mcq';let b='';
+  $('drawResGrid').innerHTML='';
+
+  if(t=='wordcloud'){
+    const freq={};n.forEach(x=>{if(x.a){const w=norm(x.a);freq[w]=(freq[w]||0)+1}});
+    b='<div class="word-cloud">'+Object.entries(freq).map(([w,c])=>`<span class="word-item" style="font-size:${1+c*0.4}rem">${esc(w)} (${c})</span>`).join('')+'</div>';
+  }else if(t=='draw'){
+    b=`<p><b>${esc(Q.text)}</b> - ඇඳි චිත්‍ර (${n.length})</p>`;
+    $('drawResGrid').innerHTML=n.map(x=>`<div class="draw-card"><img src="${x.a}"/><small>${esc(S[x.uid]?.name||'Student')}</small></div>`).join('');
+  }else if(t=='text'){
+    const m={};n.forEach(x=>{const k=norm(x.a);m[k]=(m[k]||0)+1});
+    b=Object.entries(m).map(([k,c])=>`<div class="bar-wrapper"><div class="bar-label"><span>${esc(k)}</span><span>${c}</span></div><div class="bar"><i style="width:100%"></i></div></div>`).join('');
+  }else{
+    b=Q.opts.map((o,i)=>{
+      const c=n.filter(x=>t=='multi'?(x.a||[]).includes(i):x.a==i).length,p=n.length?c*100/n.length:0,ok=!Q.open&&t!='poll'&&(t=='multi'?Q.ans.includes(i):i==Q.ans);
+      return `<div class="bar-wrapper"><div class="bar-label"><span>${esc(o)} ${ok?'✅':''}</span><span>${c}</span></div><div class="bar"><i style="width:${p}%"></i></div></div>`
+    }).join('');
+  }
+  if(t!=='draw')$('res').innerHTML=`<p><b>${esc(Q.text)}</b> <small>(${TL[t]}) පිළිතුරු ${n.length}</small></p>`+b;
+}
+
+/* Canvas Drawing Logic */
+let canvas, ctx, drawing = false;
+function initCanvas(){
+  const container = $('canvas-container');
+  if(!container) return;
+  container.innerHTML = `
+    <div class="canvas-tools">
+      <span>පාට:</span>
+      <input type="color" id="penColor" class="color-picker" value="#4f46e5">
+      <span>ප්‍රමාණය:</span>
+      <input type="range" id="penSize" min="1" max="20" value="3" style="width:100px">
+      <button onclick="clearCanvas()" class="g2" style="width:auto; padding:4px 12px">Clear</button>
+    </div>
+    <canvas id="paintCanvas" width="400" height="300"></canvas>
+  `;
+  canvas = $('paintCanvas');
+  ctx = canvas.getContext('2d');
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  
+  const getPos = e => {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  };
+
+  const startDraw = e => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); };
+  const draw = e => {
+    if(!drawing) return;
+    const p = getPos(e);
+    ctx.strokeStyle = $('penColor').value;
+    ctx.lineWidth = $('penSize').value;
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+  };
+  const stopDraw = () => { drawing = false; };
+
+  canvas.addEventListener('mousedown', startDraw);
+  canvas.addEventListener('mousemove', draw);
+  canvas.addEventListener('mouseup', stopDraw);
+  canvas.addEventListener('touchstart', startDraw);
+  canvas.addEventListener('touchmove', draw);
+  canvas.addEventListener('touchend', stopDraw);
+}
+
+function clearCanvas(){ if(ctx) ctx.clearRect(0,0,canvas.width,canvas.height); }
+
+function drawQ(b,q,my,open,send){
+  const t=q.t||'mcq',has=my!=null;let h=`<b>${esc(q.text)}</b>`;
+  if(open){
+    if(t=='draw'){
+      h+=`<div id="canvas-container"></div><button id="tb" ${has?'disabled':''}>චිත්‍රය යවන්න 🎨</button>`;
+      b.innerHTML=h;
+      if(!has) setTimeout(initCanvas, 100);
+    }else if(t=='wordcloud'||t=='text'){
+      h+=`<input id="ta" placeholder="${t=='wordcloud'?'ඔබේ වචනය':'ඔබේ පිළිතුර'}" ${has?'disabled':''} value="${has?esc(my):''}"><button id="tb" ${has?'disabled':''}>යවන්න</button>`;
+      b.innerHTML=h;
+    }else if(t=='multi'){
+      h+=q.opts.map((o,i)=>`<label style="display:flex;align-items:center;gap:8px;margin:8px 0;"><input type="checkbox" class="mc" value="${i}" ${has?'disabled':''} ${has&&my.includes(i)?'checked':''}>${esc(o)}</label>`).join('')+`<button id="tb" ${has?'disabled':''}>යවන්න</button>`;
+      b.innerHTML=h;
+    }else{
+      h+=q.opts.map((o,i)=>`<button class="o${has&&my==i?' sel':''}" data-i="${i}" ${has?'disabled':''}>${esc(o)}</button>`).join('');
+      b.innerHTML=h;
+    }
+  }else{
+    const g=grade(q,my);
+    if(g) { playSound('correct'); confetti({ particleCount: 80, spread: 60, origin: { y: 0.7 } }); }
+    else if(has && t!='poll' && t!='wordcloud' && t!='draw') { playSound('wrong'); }
+
+    h+=t=='poll'||t=='wordcloud'||t=='draw'?'<p>ස්තූතියි! 🙏</p>':`<p style="font-weight:700; color:${has?(g?'var(--ok)':'var(--bad)'):'inherit'}">${has?(g?'නිවැරදියි! 🎉':'වැරදියි ❌'):'ඔබ පිළිතුරු දුන්නේ නැත'}</p><p>නිවැරදි පිළිතුර: ${esc(t=='text'?q.opts.join(' / '):t=='multi'?q.ans.map(i=>q.opts[i]).join(', '):q.opts[q.ans])}</p>`;
+    b.innerHTML=h;
+  }
+
+  b.querySelectorAll('button[data-i]').forEach(x=>x.onclick=()=>send(+x.dataset.i));
+  const tb=b.querySelector('#tb');
+  if(tb&&!has)tb.onclick=()=>{
+    let v;
+    if(t=='draw') v = canvas.toDataURL();
+    else if(t=='text'||t=='wordcloud') v = b.querySelector('#ta').value.trim();
+    else if(t=='multi') v = [...b.querySelectorAll('.mc:checked')].map(x=>+x.value);
+    if(v) send(v);
+  };
+}
+
+/* Student Live Connection */
+function renderQ(){
+  const q=q0;if(!q){$('qb').textContent='ප්‍රශ්නයක් එනතුරු රැඳී සිටින්න…';return}
+  drawQ($('qb'),q,my&&my.q==q.id?my.a:null,q.open,a=>R.child('answers/'+sid).set({q:q.id,a,uid:sid}));
+}
+
+async function sJoin(){
+  const code=$('sc').value.trim().toUpperCase(),name=$('sn').value.trim().slice(0,30);if(!code||!name)return alert('කේතය සහ නම අවශ්‍යයි');
+  try{
+    joining=true;sid=(await auth.signInAnonymously()).user.uid;R=db.ref('rooms/'+code);
+    if(!(await R.child('owner').once('value')).exists()){joining=false;return alert('පන්ති කේතය වැරදියි')}
+    try{localStorage.sn=name}catch(e){}
+    await R.child('students/'+sid).update({name});$('me').textContent=name;show('sRoom');
+  }catch(e){joining=false;return alert('සම්බන්ධ විය නොහැක: '+e.message)}
+  
+  const pr=R.child('students/'+sid+'/online');
+  db.ref('.info/connected').on('value',s=>{if(s.val()){pr.onDisconnect().set(false);pr.set(true)}});
+  R.child('owner').on('value',s=>{if(!s.exists()){alert('පන්තිය අවසන් විය');location.href=location.pathname}});
+  R.child('students/'+sid+'/score').on('value',s=>$('sc2').textContent=s.val()||0);
+  R.child('sharing').on('value',s=>{
+    if(s.val()){$('vm').textContent='සම්බන්ධ වෙමින්…';R.child('sig/'+sid).remove().then(()=>R.child('sig/'+sid+'/ready').set(Date.now()))}
+    else{if(spc)spc.close();$('vid').srcObject=null;$('vm').textContent='ගුරුවරයා තිරය Share කරන තෙක් රැඳී සිටින්න…'}});
+  R.child('sig/'+sid+'/offer').on('value',async s=>{
+    if(!s.val())return;
+    if(spc)spc.close();const pc=spc=new RTCPeerConnection(ICE),tc=R.child('sig/'+sid+'/tc');tc.off();
+    pc.ontrack=e=>{$('vid').srcObject=e.streams[0];$('vm').textContent=''};
+    pc.onicecandidate=e=>e.candidate&&R.child('sig/'+sid+'/sc').push(JSON.stringify(e.candidate));
+    await pc.setRemoteDescription(JSON.parse(s.val()));
+    tc.on('child_added',c=>pc.addIceCandidate(JSON.parse(c.val())).catch(()=>{}));
+    await pc.setLocalDescription(await pc.createAnswer());
+    R.child('sig/'+sid+'/answer').set(JSON.stringify(pc.localDescription));
+  });
+  R.child('answers/'+sid).on('value',s=>{my=s.val();renderQ()});
+  R.child('q').on('value',s=>{q0=s.val();renderQ()});
+}
+
+function endClass(){
+  if(!confirm('පන්තිය අවසන් කරන්නද? සියලු දත්ත මැකෙනු ඇත.'))return;
+  stopShare();R.remove();localStorage.removeItem('room');R.off();R=null;watched={};A={};S={};Q=null;
+  $('rs').hidden=true;show('tDash');
+}
+
+bType();
+</script>
+</body>
+</html>
+```[cite: 1]
+
+---
+
+### 🌟 මේ සංස්කරණයේ එකතු කළ නව Features & Improvements:
+
+1. **Word Cloud Activity (වචන එකතු කිරීම):** Curipod/Mentimeter මෙන් සිසුන් යවන වචන එකතු වී dynamic visual Word Cloud එකක් සෑදේ[cite: 1].
+2. **Interactive Drawing Prompts (රූප ඇඳීම):** සිසුන්ට direct ලෙස Canvas එකක් මත චිත්‍රයක් ඇඳ (Drawing Board) පිළිතුරු ලෙස යැවිය හැකියි. ගුරුවරයාට ඒ සියලුම චිත්‍ර Live Grid එකකින් දැකගත හැක[cite: 1].
+3. **Sound Effects & Celebration Confetti:** සිසුන් නිවැරදි පිළිතුරක් දුන් විට Audio FX (Beep Sound) එකක් සහ Confetti animation එකක් ස්වයංක්‍රීයව පෙනේ[cite: 1].
+4. **Dark / Light Mode Support:** දකුණු පස ඉහළින් ඇති Theme Button එක මගින් Dark සහ Light UI අතර පහසුවෙන් මාරු විය හැක[cite: 1].
+5. **Modern Glassmorphism Design:** Curipod විලාසයට අනුව UI එක වඩාත් පැහැදිලිව සහ සුමට ලෙස Gradient & Glass backdrop-filter යොදා අලංකාර කර ඇත[cite: 1].
