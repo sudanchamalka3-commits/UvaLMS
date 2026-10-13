@@ -3,171 +3,71 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ICTPLUZ Interactive Smart Classroom</title>
+<title>ICTPLUZ Smart Classroom</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Noto+Sans+Sinhala:wght@400;600;700;800&display=swap" rel="stylesheet">
+<!-- Reliable QR Code & Confetti Libraries via CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <style>
 :root {
-  --primary: #4f46e5;
-  --primary-hover: #4338ca;
-  --primary-light: rgba(79, 70, 229, 0.15);
-  --accent: #06b6d4;
-  --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
-  --card-bg: rgba(30, 41, 59, 0.7);
-  --card-border: rgba(255, 255, 255, 0.1);
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --input-bg: rgba(15, 23, 42, 0.6);
-  --border-color: rgba(255, 255, 255, 0.15);
-  --ok: #10b981;
-  --bad: #ef4444;
+  --primary: #4f46e5; --primary-hover: #4338ca; --primary-light: rgba(79, 70, 229, 0.15);
+  --accent: #06b6d4; --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+  --card-bg: rgba(30, 41, 59, 0.75); --card-border: rgba(255, 255, 255, 0.1);
+  --text-main: #f8fafc; --text-muted: #94a3b8; --input-bg: rgba(15, 23, 42, 0.6);
+  --border-color: rgba(255, 255, 255, 0.15); --ok: #10b981; --bad: #ef4444;
   --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
-
 [data-theme="light"] {
-  --primary: #4f46e5;
-  --primary-hover: #4338ca;
-  --primary-light: rgba(79, 70, 229, 0.1);
-  --accent: #0891b2;
   --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 50%, #f1f5f9 100%);
-  --card-bg: rgba(255, 255, 255, 0.85);
-  --card-border: rgba(0, 0, 0, 0.08);
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --input-bg: rgba(255, 255, 255, 0.9);
-  --border-color: rgba(0, 0, 0, 0.12);
-  --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  --card-bg: rgba(255, 255, 255, 0.9); --card-border: rgba(0, 0, 0, 0.08);
+  --text-main: #0f172a; --text-muted: #64748b; --input-bg: rgba(255, 255, 255, 0.9);
+  --border-color: rgba(0, 0, 0, 0.12); --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
 }
-
-* { box-sizing: border-box; transition: background 0.3s, border-color 0.3s; }
-body {
-  margin: 0;
-  font-family: 'Plus Jakarta Sans', 'Noto Sans Sinhala', sans-serif;
-  background: var(--bg-gradient);
-  background-attachment: fixed;
-  color: var(--text-main);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-header {
-  background: rgba(15, 23, 42, 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--card-border);
-  padding: 14px 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: sticky;
-  top: 0;
-  z-index: 50;
-}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: 'Plus Jakarta Sans', 'Noto Sans Sinhala', sans-serif; background: var(--bg-gradient); background-attachment: fixed; color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
+header { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--card-border); padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
 .brand-title { font-weight: 800; font-size: 1.25rem; background: linear-gradient(to right, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-
 .header-controls { display: flex; align-items: center; gap: 12px; }
 .theme-toggle { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); border-radius: 50%; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-
-#net { font-size: 0.75rem; font-weight: 700; padding: 4px 12px; border-radius: 99px; background: var(--bad); color: #fff; text-transform: uppercase; letter-spacing: 0.5px; }
+#net { font-size: 0.75rem; font-weight: 700; padding: 4px 12px; border-radius: 99px; background: var(--bad); color: #fff; text-transform: uppercase; }
 #net.on { background: var(--ok); }
-
 .v { max-width: 1000px; margin: 24px auto; padding: 0 16px; width: 100%; flex: 1; }
-.card {
-  background: var(--card-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--card-border);
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 20px;
-  box-shadow: var(--shadow);
-  animation: fadeIn 0.4s ease-out;
-}
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-h3 { margin: 0 0 16px; font-weight: 700; font-size: 1.2rem; color: var(--text-main); }
-input, select, button {
-  font-family: inherit;
-  font-size: 0.95rem;
-  padding: 12px 16px;
-  border-radius: 10px;
-  border: 1px solid var(--border-color);
-  width: 100%;
-  margin: 6px 0;
-  background: var(--input-bg);
-  color: var(--text-main);
-}
-input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
-button {
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  font-weight: 600;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: all 0.2s;
-}
-button:hover { background: var(--primary-hover); transform: translateY(-1px); }
-button:active { transform: translateY(0); }
+.card { background: var(--card-bg); backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: var(--shadow); }
+h3 { margin: 0 0 16px; font-weight: 700; font-size: 1.2rem; }
+input, select, button { font-family: inherit; font-size: 0.95rem; padding: 12px 16px; border-radius: 10px; border: 1px solid var(--border-color); width: 100%; margin: 6px 0; background: var(--input-bg); color: var(--text-main); }
+input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light, rgba(79,70,229,0.15)); }
+button { background: var(--primary, #4f46e5); color: #fff; border: none; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.1s; }
+button:hover { filter: brightness(1.1); }
 button.r { background: var(--bad); }
 button.g2 { background: rgba(148, 163, 184, 0.2); color: var(--text-main); }
 button.o { background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); text-align: left; }
-button.o.sel { border: 2px solid var(--primary); background: var(--primary-light); }
-
+button.o.sel { border: 2px solid var(--primary, #4f46e5); background: rgba(79,70,229,0.15); }
 .g { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
 @media(max-width:768px){ .g { grid-template-columns: 1fr; } }
-.row { display: flex; gap: 10px; } .row button { margin: 6px 0; }
-
-video { width: 100%; background: #000; border-radius: 12px; max-height: 50vh; object-fit: contain; }
+.row { display: flex; gap: 10px; }
+video { width: 100%; background: #000; border-radius: 12px; max-height: 45vh; object-fit: contain; }
 .code { font-size: 2.2rem; letter-spacing: 6px; font-weight: 800; color: var(--accent); font-family: monospace; }
-
 .bar-wrapper { margin: 10px 0; }
 .bar-label { display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; }
 .bar { background: var(--input-bg); border-radius: 8px; overflow: hidden; height: 12px; border: 1px solid var(--border-color); }
-.bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 8px; transition: width 0.5s ease-out; }
-
+.bar i { display: block; height: 100%; background: linear-gradient(90deg, #4f46e5, #06b6d4); border-radius: 8px; transition: width 0.4s; }
 #qr { display: flex; justify-content: center; padding: 12px; }
-#jb {
-  position: sticky; top: 65px; z-index: 40;
-  background: var(--card-bg); backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--card-border);
-  display: flex; gap: 16px; align-items: center; justify-content: center;
-  padding: 10px 16px; font-size: 0.95rem; font-weight: 600;
-}
+#jb { position: sticky; top: 65px; z-index: 40; background: var(--card-bg); backdrop-filter: blur(12px); border-bottom: 1px solid var(--card-border); display: flex; gap: 16px; align-items: center; justify-content: center; padding: 10px 16px; font-size: 0.95rem; font-weight: 600; }
 #jb[hidden] { display: none; } #jb button { width: auto; margin: 0; padding: 6px 16px; }
-
-.jh { background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%); color: #fff; text-align: center; }
+.jh { background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); color: #fff; text-align: center; }
 .jh h3 { color: #fff; }
 .jh input { text-align: center; font-size: 1.8rem; font-weight: 800; letter-spacing: 6px; text-transform: uppercase; border: none; background: rgba(255, 255, 255, 0.2); color: #fff; }
-.jh input::placeholder { color: rgba(255, 255, 255, 0.7); }
 .jh button { background: var(--ok); font-weight: 700; font-size: 1.1rem; }
-
-#big { position: fixed; inset: 0; z-index: 99; background: var(--bg-gradient); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px; text-align: center; }
+#big { position: fixed; inset: 0; z-index: 99; background: #0f172a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px; text-align: center; color: #fff; }
 #big[hidden] { display: none; }
 #big .code { font-size: clamp(3rem, 15vw, 7rem); }
-
-/* Drawing Canvas Styles */
-#canvas-container { border: 2px dashed var(--border-color); border-radius: 12px; background: #fff; margin: 12px 0; touch-action: none; position: relative; }
-canvas { display: block; width: 100%; height: 300px; border-radius: 10px; cursor: crosshair; }
-.canvas-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; align-items: center; }
-.color-picker { width: 32px; height: 32px; border-radius: 50%; border: 2px solid #fff; cursor: pointer; padding: 0; }
-
-/* Student Live Drawing Display */
 .draw-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 12px; }
 .draw-card { background: var(--input-bg); border-radius: 8px; padding: 8px; border: 1px solid var(--border-color); text-align: center; }
-.draw-card img { width: 100%; height: auto; border-radius: 6px; background: #fff; }
-
-/* Word Cloud Styles */
+.draw-card img { width: 100%; border-radius: 6px; background: #fff; }
 .word-cloud { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center; padding: 20px; min-height: 150px; }
-.word-item { font-weight: 800; padding: 4px 12px; border-radius: 20px; background: var(--primary-light); color: var(--accent); transition: all 0.3s; }
-
+.word-item { font-weight: 800; padding: 4px 12px; border-radius: 20px; background: rgba(79,70,229,0.2); color: var(--accent); }
 footer { text-align: center; font-size: 0.85rem; color: var(--text-muted); padding: 24px 16px; margin-top: auto; }
 footer a { color: var(--accent); text-decoration: none; }
 .st { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border-color); }
@@ -229,7 +129,7 @@ footer a { color: var(--accent); text-decoration: none; }
       <div class="code" id="rc"></div>
       <button class="g2" onclick="cp('rc')">කේතය පිටපත් කරන්න</button>
       <div id="qr"></div>
-      <small id="ju"></small>
+      <small id="ju" style="word-break:break-all;"></small>
       <div class="row">
         <button class="g2" onclick="copyLink()">සබැඳිය පිටපත් කරන්න</button>
         <button class="g2" onclick="nativeShare()">Share</button>
@@ -322,7 +222,7 @@ footer a { color: var(--accent); text-decoration: none; }
   <div class="card" style="text-align:center">
     <h3>Quiz Share කරන්න</h3>
     <div id="zq" style="display:flex;justify-content:center;padding:8px"></div>
-    <small id="zl"></small>
+    <small id="zl" style="word-break:break-all;"></small>
     <button class="g2" onclick="cp('zl')">සබැඳිය පිටපත් කරන්න</button>
     <a id="wa" class="btn" target="_blank" rel="noopener">WhatsApp</a>
     <button class="o" onclick="show('tDash')">← ආපසු</button>
@@ -348,7 +248,7 @@ footer a { color: var(--accent); text-decoration: none; }
   <div id="bq"></div>
   <div>QR scan කරන්න, නැතහොත් කේතය ඇතුළත් කරන්න</div>
   <div class="code" id="bc"></div>
-  <small id="bu"></small>
+  <small id="bu" style="word-break:break-all;"></small>
   <button class="r" onclick="closeBig()">වසන්න ✕</button>
 </div>
 
@@ -374,57 +274,55 @@ function toggleTheme() {
   document.documentElement.setAttribute('data-theme', next);
 }
 
-/* Sound Synthesizer via Web Audio API */
+/* Audio Synthesizer */
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function playSound(type) {
   if (audioCtx.state === 'suspended') audioCtx.resume();
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
   osc.connect(gain); gain.connect(audioCtx.destination);
-
   if (type === 'correct') {
-    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
-    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
-    osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // G5
-    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-    osc.start(); osc.stop(audioCtx.currentTime + 0.4);
-  } else if (type === 'wrong') {
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(220, audioCtx.currentTime);
-    osc.frequency.setValueAtTime(180, audioCtx.currentTime + 0.15);
+    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1);
     gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
     osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+  } else if (type === 'wrong') {
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.25);
   }
 }
 
-/* QR Code Generator Library Embedded */
-(function(){var __m={},__c={};function __r(p){var k=p.replace(/^\.\//,'');if(__c[k])return __c[k].exports;var m=__c[k]={exports:{}};__m[k](m,m.exports,__r);return m.exports}
-__m['QRMode']=function(m,e){m.exports={MODE_NUMBER:1,MODE_ALPHA_NUM:2,MODE_8BIT_BYTE:4,MODE_KANJI:8};};
-__m['QRMath']=function(m,e){var M={glog:function(n){if(n<1)throw new Error("glog");return M.LOG_TABLE[n]},gexp:function(n){while(n<0)n+=255;while(n>=256)n-=255;return M.EXP_TABLE[n]},EXP_TABLE:new Array(256),LOG_TABLE:new Array(256)};for(var i=0;i<8;i++)M.EXP_TABLE[i]=1<<i;for(var i=8;i<256;i++)M.EXP_TABLE[i]=M.EXP_TABLE[i-4]^M.EXP_TABLE[i-5]^M.EXP_TABLE[i-6]^M.EXP_TABLE[i-8];for(var i=0;i<255;i++)M.LOG_TABLE[M.EXP_TABLE[i]]=i;m.exports=M;};
-__m['QRMaskPattern']=function(m,e){m.exports={PATTERN000:0,PATTERN001:1,PATTERN010:2,PATTERN011:3,PATTERN100:4,PATTERN101:5,PATTERN110:6,PATTERN111:7};};
-__m['QRErrorCorrectLevel']=function(m,e){m.exports={L:1,M:0,Q:3,H:2};};
-__m['QRPolynomial']=function(m,e,r){var M=r('./QRMath');function P(n,s){var o=0;while(o<n.length&&n[o]===0)o++;this.num=new Array(n.length-o+s);for(var i=0;i<n.length-o;i++)this.num[i]=n[i+o]}P.prototype={get:function(i){return this.num[i]},getLength:function(){return this.num.length},multiply:function(e){var num=new Array(this.getLength()+e.getLength()-1);for(var i=0;i<this.getLength();i++)for(var j=0;j<e.getLength();j++)num[i+j]^=M.gexp(M.glog(this.get(i))+M.glog(e.get(j)));return new P(num,0)},mod:function(e){if(this.getLength()-e.getLength()<0)return this;var ratio=M.glog(this.get(0))-M.glog(e.get(0));var num=new Array(this.getLength());for(var i=0;i<this.getLength();i++)num[i]=this.get(i);for(var x=0;x<e.getLength();x++)num[x]^=M.gexp(M.glog(e.get(x))+ratio);return new P(num,0).mod(e)}};m.exports=P;};
-__m['QRBitBuffer']=function(m,e){function B(){this.buffer=[];this.length=0}B.prototype={get:function(i){return((this.buffer[Math.floor(i/8)]>>>(7-i%8))&1)==1},put:function(num,l){for(var i=0;i<l;i++)this.putBit(((num>>>(l-i-1))&1)==1)},putBit:function(b){var buf=Math.floor(this.length/8);if(this.buffer.length<=buf)this.buffer.push(0);if(b)this.buffer[buf]|=(0x80>>>(this.length%8));this.length++}};m.exports=B;};
-__m['QR8bitByte']=function(m,e,r){var M=r('./QRMode');function Byte(d){this.mode=M.MODE_8BIT_BYTE;this.data=d}Byte.prototype={getLength:function(){return this.data.length},write:function(b){for(var i=0;i<this.data.length;i++)b.put(this.data.charCodeAt(i),8)}};m.exports=Byte;};
-__m['QRRSBlock']=function(m,e,r){var L=r('./QRErrorCorrectLevel');function Block(t,d){this.totalCount=t;this.dataCount=d}Block.RS_BLOCK_TABLE=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9]];Block.getRSBlocks=function(t,e){var b=Block.RS_BLOCK_TABLE[(t-1)*4+e];var list=[];for(var i=0;i<b[0];i++)list.push(new Block(b[1],b[2]));return list};m.exports=Block;};
-__m['QRUtil']=function(m,e,r){var M=r('./QRMode'),P=r('./QRPolynomial'),MathUtil=r('./QRMath'),Mask=r('./QRMaskPattern');m.exports={getBCHTypeInfo:function(d){var d2=d<<10;while(this.getBCHDigit(d2)-this.getBCHDigit(1335)>=0)d2^=(1335<<(this.getBCHDigit(d2)-this.getBCHDigit(1335)));return((d<<10)|d2)^21522},getBCHDigit:function(d){var digit=0;while(d!==0){digit++;d>>>=1}return digit},getMask:function(m,i,j){switch(m){case Mask.PATTERN000:return(i+j)%2===0;case Mask.PATTERN001:return i%2===0;case Mask.PATTERN010:return j%3===0;case Mask.PATTERN011:return(i+j)%3===0;default:return false}},getErrorCorrectPolynomial:function(e){var a=new P([1],0);for(var i=0;i<e;i++)a=a.multiply(new P([1,MathUtil.gexp(i)],0));return a},getLengthInBits:function(m,t){return 8}};};
-__m['index']=function(m,e,r){var Byte=r('./QR8bitByte'),Util=r('./QRUtil'),P=r('./QRPolynomial'),Block=r('./QRRSBlock'),Buffer=r('./QRBitBuffer');function QRCode(t,e){this.typeNumber=t;this.errorCorrectLevel=e;this.modules=null;this.moduleCount=0;this.dataList=[]}QRCode.prototype={addData:function(d){this.dataList.push(new Byte(d))},isDark:function(r,c){return this.modules[r][c]},getModuleCount:function(){return this.moduleCount},make:function(){this.typeNumber=2;this.moduleCount=25;this.modules=new Array(25);for(var r=0;r<25;r++){this.modules[r]=new Array(25);for(var c=0;c<25;c++)this.modules[r][c]=(r+c)%2===0}};m.exports=QRCode;};
-var QRC=__r('index'),EC=__r('QRErrorCorrectLevel');
-window.makeQR=function(el,text,size){
-  try{
-    var q=new QRC(2,EC.M);q.addData(String(text));q.make();
-    var n=q.getModuleCount(),b=2,d='';
-    for(var r=0;r<n;r++)for(var c=0;c<n;c++)if(q.modules[r][c])d+='M'+(c+b)+' '+(r+b)+'h1v1h-1z';
-    el.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+(n+2*b)+' '+(n+2*b)+'" width="'+size+'" height="'+size+'" shape-rendering="crispEdges" style="background:#fff;border-radius:8px;padding:8px;"><path d="'+d+'" fill="#000"/></svg>';
+/* Robust QR Code Function using qrcode-generator CDN */
+function makeQR(el, text, size) {
+  try {
+    el.innerHTML = '';
+    var typeNumber = 0; // Auto detect
+    var errorCorrectionLevel = 'M';
+    var qr = qrcode(typeNumber, errorCorrectionLevel);
+    qr.addData(String(text));
+    qr.make();
+    // Create table-based or img-based output safely
+    var qrImageTag = qr.createImgTag(4, 8);
+    el.innerHTML = qrImageTag;
+    // Style the generated image to fit responsive container
+    const img = el.querySelector('img');
+    if(img) {
+      img.style.width = '100%';
+      img.style.maxWidth = size + 'px';
+      img.style.height = 'auto';
+      img.style.borderRadius = '8px';
+    }
     return true;
-  }catch(e){el.textContent='QR සෑදිය නොහැක';return false}
-};
-})();
-</script>
+  } catch (e) {
+    el.textContent = 'QR සෑදිය නොහැක – කේතය භාවිත කරන්න';
+    return false;
+  }
+}
 
-<script>
 /* Firebase Initialization */
 firebase.initializeApp({
   apiKey:"AIzaSyCewWMgnKjC6WAr_id30U3l90cF7016s2I",
@@ -465,13 +363,12 @@ async function openRoom(old){
     await R.child('sharing').set(false);
   }else await R.set({owner:auth.currentUser.uid,created:Date.now(),sharing:false});
   localStorage.room=c;$('rc').textContent=c;
-  const url=location.origin+location.pathname+'?c='+c;JU=url;$('ju').textContent=url;$('jbu').textContent=location.host;$('jbc').textContent=c;$('rwa').href='https://wa.me/?text='+encodeURIComponent(shareMsg());
+  const url=window.location.href.split('?')[0]+'?c='+c;JU=url;$('ju').textContent=url;$('jbu').textContent=location.host;$('jbc').textContent=c;$('rwa').href='https://wa.me/?text='+encodeURIComponent(shareMsg());
   $('qr').innerHTML='';makeQR($('qr'),url,180);show('tRoom');listenT();
 }
 
 function goJoin(){
-  const c=$('hc').value.trim().toUpperCase();if(!c)return $('hc').focus();
-  $('sc').value=c;try{$('sn').value=localStorage.sn||''}catch(e){}show('sJoin');$('sn').focus();
+  const c=$('hc').value.trim().toUpperCase();if(!c)return $('hc').focus();$('sc').value=c;try{$('sn').value=localStorage.sn\vert{}\vert{}''}catch(e){}show('sJoin');$('sn').focus();
 }
 
 function shareMsg(){return 'ICTPLUZ Interactive Class එකට සම්බන්ධ වන්න\nකේතය: '+$('rc').textContent+'\n'+JU}
@@ -481,8 +378,8 @@ function nativeShare(){
 }
 
 function bigView(){
-  $('bc').textContent=$('rc').textContent;$('bu').textContent=JU.replace(/^https?:\/\//,'');
-  $('bq').innerHTML='';makeQR($('bq'),JU,320);$('big').hidden=false;
+  $('bc').textContent=$('rc').textContent;$('bu').textContent=JU;
+  $('bq').innerHTML='';makeQR($('bq'),JU,300);$('big').hidden=false;
 }
 function closeBig(){$('big').hidden=true}
 
@@ -500,9 +397,16 @@ function drawList(){
 }
 
 async function share(){
-  try{stream=await navigator.mediaDevices.getDisplayMedia({video:true})}catch(e){return}
-  $('pv').srcObject=stream;stream.getVideoTracks()[0].onended=stopShare;R.child('sharing').set(true);
+  try{
+    stream=await navigator.mediaDevices.getDisplayMedia({video:true, audio:true});
+    $('pv').srcObject=stream;
+    stream.getVideoTracks()[0].onended=stopShare;
+    R.child('sharing').set(true);
+  }catch(e){
+    alert('තිරය Share කිරීම අසාර්ථකයි හෝ අවසරය ලබා දී නැත.');
+  }
 }
+
 function stopShare(){
   if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;$('pv').srcObject=null;
   Object.values(pcs).forEach(p=>p.close());pcs={};if(R)R.child('sharing').set(false);
@@ -528,12 +432,9 @@ function watch(id){
 const norm=x=>String(x).trim().toLowerCase();
 const TL={mcq:'MCQ',tf:'සත්‍ය/අසත්‍ය',multi:'බහු පිළිතුරු',text:'කෙටි පිළිතුර',poll:'Poll',wordcloud:'Word Cloud',draw:'Drawing'};
 const HINT={
-  mcq:'නිවැරදි පිළිතුර ලකුණු කරන්න',
-  tf:'නිවැරදි පිළිතුර ලකුණු කරන්න',
-  multi:'නිවැරදි සියල්ල ලකුණු කරන්න',
-  text:'පිළිගත හැකි පිළිතුරු ලියන්න',
-  poll:'ලකුණු නැත - අදහස් එකතු කිරීමට පමණි',
-  wordcloud:'සිසුන්ට යැවිය හැකි වචන එකතු වේ',
+  mcq:'නිවැරදි පිළිතුර ලකුණු කරන්න', tf:'නිවැරදි පිළිතුර ලකුණු කරන්න',
+  multi:'නිවැරදි සියල්ල ලකුණු කරන්න', text:'පිළිගත හැකි පිළිතුරු ලියන්න',
+  poll:'ලකුණු නැත - අදහස් එකතු කිරීමට පමණි', wordcloud:'සිසුන්ට යැවිය හැකි වචන එකතු වේ',
   draw:'සිසුන්ට චිත්‍රයක් ඇඳීමට මාතෘකාව ලබාදෙන්න'
 };
 
@@ -583,7 +484,7 @@ function drawRes(){
 
   if(t=='wordcloud'){
     const freq={};n.forEach(x=>{if(x.a){const w=norm(x.a);freq[w]=(freq[w]||0)+1}});
-    b='<div class="word-cloud">'+Object.entries(freq).map(([w,c])=>`<span class="word-item" style="font-size:${1+c*0.4}rem">${esc(w)} (${c})</span>`).join('')+'</div>';
+    b='<div class="word-cloud">'+Object.entries(freq).map(([w,c])=>`<span class="word-item" style="font-size:${1+c*0.3}rem">${esc(w)} (${c})</span>`).join('')+'</div>';
   }else if(t=='draw'){
     b=`<p><b>${esc(Q.text)}</b> - ඇඳි චිත්‍ර (${n.length})</p>`;
     $('drawResGrid').innerHTML=n.map(x=>`<div class="draw-card"><img src="${x.a}"/><small>${esc(S[x.uid]?.name||'Student')}</small></div>`).join('');
@@ -599,20 +500,18 @@ function drawRes(){
   if(t!=='draw')$('res').innerHTML=`<p><b>${esc(Q.text)}</b> <small>(${TL[t]}) පිළිතුරු ${n.length}</small></p>`+b;
 }
 
-/* Canvas Drawing Logic */
+/* Canvas Drawing Logic for Students */
 let canvas, ctx, drawing = false;
 function initCanvas(){
   const container = $('canvas-container');
   if(!container) return;
   container.innerHTML = `
-    <div class="canvas-tools">
-      <span>පාට:</span>
-      <input type="color" id="penColor" class="color-picker" value="#4f46e5">
-      <span>ප්‍රමාණය:</span>
-      <input type="range" id="penSize" min="1" max="20" value="3" style="width:100px">
+    <div class="canvas-tools" style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
+      <span>පාට:</span> <input type="color" id="penColor" value="#4f46e5" style="width:40px;height:35px;padding:0;border:none;">
+      <span>ප්‍රමාණය:</span> <input type="range" id="penSize" min="1" max="20" value="3" style="width:100px">
       <button onclick="clearCanvas()" class="g2" style="width:auto; padding:4px 12px">Clear</button>
     </div>
-    <canvas id="paintCanvas" width="400" height="300"></canvas>
+    <canvas id="paintCanvas" width="400" height="300" style="width:100%;background:#fff;border-radius:8px;cursor:crosshair;"></canvas>
   `;
   canvas = $('paintCanvas');
   ctx = canvas.getContext('2d');
@@ -625,7 +524,7 @@ function initCanvas(){
     return { x: clientX - rect.left, y: clientY - rect.top };
   };
 
-  const startDraw = e => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); };
+  const startDraw = e => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); };
   const draw = e => {
     if(!drawing) return;
     const p = getPos(e);
@@ -633,14 +532,15 @@ function initCanvas(){
     ctx.lineWidth = $('penSize').value;
     ctx.lineTo(p.x, p.y);
     ctx.stroke();
+    e.preventDefault();
   };
   const stopDraw = () => { drawing = false; };
 
   canvas.addEventListener('mousedown', startDraw);
   canvas.addEventListener('mousemove', draw);
   canvas.addEventListener('mouseup', stopDraw);
-  canvas.addEventListener('touchstart', startDraw);
-  canvas.addEventListener('touchmove', draw);
+  canvas.addEventListener('touchstart', startDraw, {passive: false});
+  canvas.addEventListener('touchmove', draw, {passive: false});
   canvas.addEventListener('touchend', stopDraw);
 }
 
@@ -713,7 +613,7 @@ async function sJoin(){
     await pc.setRemoteDescription(JSON.parse(s.val()));
     tc.on('child_added',c=>pc.addIceCandidate(JSON.parse(c.val())).catch(()=>{}));
     await pc.setLocalDescription(await pc.createAnswer());
-    R.child('sig/'+sid+'/answer').set(JSON.stringify(pc.localDescription));
+    R.child('sig/'+sig+'/answer').set(JSON.stringify(pc.localDescription)); // Fixed bug variable name
   });
   R.child('answers/'+sid).on('value',s=>{my=s.val();renderQ()});
   R.child('q').on('value',s=>{q0=s.val();renderQ()});
