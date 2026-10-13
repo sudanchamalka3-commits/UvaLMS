@@ -21,6 +21,18 @@ video{width:100%;background:#000;border-radius:8px;max-height:60vh}
 .code{font-size:2rem;letter-spacing:6px;font-weight:800;color:var(--pd)}
 .bar{background:#dbeafe;border-radius:6px;margin:4px 0;padding:6px}.bar i{display:block;height:6px;background:var(--p);border-radius:3px;transition:width .3s}
 #qr{display:flex;justify-content:center;padding:8px}small{word-break:break-all}
+#jb{position:sticky;top:0;z-index:5;background:#fff;border-bottom:2px solid var(--p);box-shadow:0 2px 6px #0002;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;padding:8px 12px;font-size:.9rem}
+#jb[hidden]{display:none}#jb button{width:auto;margin:0;padding:6px 14px}
+.jh{background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;text-align:center}.jh h3{font-size:1.2rem}
+.jh input{text-align:center;font-size:1.6rem;font-weight:800;letter-spacing:6px;text-transform:uppercase;border:0}
+.jh button{background:#16a34a;font-weight:700}
+#big{position:fixed;inset:0;z-index:99;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;text-align:center;overflow:auto}
+#big[hidden]{display:none}
+#big .code{font-size:clamp(3rem,16vw,8rem);letter-spacing:.12em}
+#bq{display:flex;justify-content:center}#bq img,#bq canvas{width:min(70vw,45vh)!important;height:auto!important}
+#big button{width:auto;padding:10px 28px}
+footer{text-align:center;font-size:.8rem;color:#475569;padding:18px 12px 28px}footer a{color:inherit}
+footer .n{font-weight:800;font-size:.95rem;letter-spacing:1px}
 .st{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #e2e8f0}.st b{margin-left:auto}
 .d{width:9px;height:9px;border-radius:50%;background:#94a3b8}.d.on{background:var(--ok)}
 .ok{color:var(--ok);font-weight:700}.bad{color:var(--bad);font-weight:700}
@@ -28,8 +40,11 @@ video{width:100%;background:#000;border-radius:8px;max-height:60vh}
 .ro{display:flex;align-items:center}.ro .qo{flex:1}.btn{display:block;text-align:center;background:#16a34a;color:#fff;text-decoration:none;padding:10px;border-radius:8px;margin:4px 0}
 </style></head><body>
 <header><span>ICTPLUZ Smart Classroom</span><span id="net">Offline</span></header>
+<div id="jb" hidden><span>Join at <b id="jbu"></b></span><span>Code:</span><span class="code" id="jbc" style="font-size:1.5rem;letter-spacing:4px"></span><button onclick="bigView()">QR ▦</button></div>
 
-<div class="v" id="tLogin" hidden><div class="card"><h3>ගුරු පිවිසුම</h3>
+<div class="v" id="tLogin" hidden><div class="card jh"><h3>සිසුන් සඳහා – පන්තියට සම්බන්ධ වන්න</h3>
+<input id="hc" placeholder="පන්ති කේතය" maxlength="6" autocomplete="off"><button onclick="goJoin()">Join</button></div>
+<div class="card"><h3>ගුරු පිවිසුම</h3>
 <input id="em" type="email" placeholder="Email" autocomplete="username"><input id="pw" type="password" placeholder="මුරපදය" autocomplete="current-password">
 <button onclick="login()">පිවිසෙන්න</button></div></div>
 
@@ -42,8 +57,12 @@ video{width:100%;background:#000;border-radius:8px;max-height:60vh}
 
 <div class="v" id="tRoom" hidden>
 <div class="g">
-<div class="card" style="text-align:center"><div>Join Code</div><div class="code" id="rc"></div><div id="qr"></div>
-<small id="ju"></small><button class="g2" onclick="copyLink()">සබැඳිය පිටපත් කරන්න</button></div>
+<div class="card" style="text-align:center"><h3>පන්තිය Share කරන්න</h3><div>Join Code</div><div class="code" id="rc"></div>
+<button class="g2" onclick="cp('rc')">කේතය පිටපත් කරන්න</button><div id="qr"></div>
+<small id="ju"></small>
+<div class="row"><button class="g2" onclick="copyLink()">සබැඳිය පිටපත් කරන්න</button><button class="g2" onclick="nativeShare()">Share</button></div>
+<a id="rwa" class="btn" target="_blank" rel="noopener">WhatsApp</a>
+<button onclick="bigView()">🖥 විශාල QR / කේතය පෙන්වන්න</button></div>
 <div class="card"><h3>සිසුන් (<span id="cnt">0</span>)</h3><div id="sl"></div></div></div>
 <div class="g">
 <div class="card"><h3>තිරය Share කිරීම</h3><video id="pv" autoplay muted playsinline></video>
@@ -55,7 +74,8 @@ video{width:100%;background:#000;border-radius:8px;max-height:60vh}
 
 <div class="v" id="sJoin" hidden><div class="card"><h3>පන්තියට සම්බන්ධ වන්න</h3>
 <input id="sc" placeholder="පන්ති කේතය" maxlength="6" style="text-transform:uppercase">
-<input id="sn" placeholder="ඔබේ නම" maxlength="30"><button onclick="sJoin()">Join</button></div></div>
+<input id="sn" placeholder="ඔබේ නම" maxlength="30"><button onclick="sJoin()">Join</button>
+<button class="o" id="sb" style="text-align:center" onclick="show(auth.currentUser&&!auth.currentUser.isAnonymous?'tDash':'tLogin')">← ආපසු</button></div></div>
 
 <div class="v" id="sRoom" hidden>
 <div class="card"><b id="me"></b> — ලකුණු: <b id="sc2">0</b></div>
@@ -76,6 +96,15 @@ video{width:100%;background:#000;border-radius:8px;max-height:60vh}
 <div class="v" id="zJoin" hidden><div class="card"><h3>Quiz එකට සහභාගී වන්න</h3><input id="zn" placeholder="ඔබේ නම" maxlength="30"><button onclick="zStart()">ආරම්භ කරන්න</button></div></div>
 <div class="v" id="zRun" hidden><div class="card"><b id="zh"></b> <span id="zp" style="float:right"></span></div><div class="card" id="zb"></div></div>
 
+<div id="big" hidden><div style="font-weight:700">ICTPLUZ Live පන්තියට සම්බන්ධ වන්න</div><div id="bq"></div>
+<div>QR scan කරන්න, නැතහොත් කේතය ඇතුළත් කරන්න</div><div class="code" id="bc"></div><small id="bu"></small>
+<button class="r" onclick="closeBig()">වසන්න ✕</button></div>
+
+<footer><div class="n"><span style="color:#276CF5">NEXORA</span> <span style="color:#09B041">TECHNOLOGIES</span></div>
+<div>Building the Future, Digitally</div>
+<div>Created by NEXORA TECHNOLOGIES</div>
+<div>WhatsApp: <a href="https://wa.me/94706562952" target="_blank" rel="noopener">0706562952</a> · Phone: <a href="tel:0716562952">0716562952</a> · <a href="mailto:sudanchamalka@gmail.com">sudanchamalka@gmail.com</a></div></footer>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -92,17 +121,18 @@ firebase.initializeApp({
 const auth=firebase.auth(),db=firebase.database();
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const show=id=>['tLogin','tDash','tRoom','sJoin','sRoom','tBuild','tShare','zJoin','zRun'].forEach(x=>$(x).hidden=x!=id);
+const show=id=>{['tLogin','tDash','tRoom','sJoin','sRoom','tBuild','tShare','zJoin','zRun'].forEach(x=>$(x).hidden=x!=id);$('jb').hidden=!(R&&(id=='tRoom'||id=='tBuild'))};
 const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
 const C0=(new URLSearchParams(location.search).get('c')||'').toUpperCase();
-let R,Q,A={},S={},stream,sid,pcs={},watched={},q0,my,spc;
+let R,Q,A={},S={},stream,sid,pcs={},watched={},q0,my,spc,JU='',joining=false;
 
 db.ref('.info/connected').on('value',s=>{$('net').textContent=s.val()?'Online':'Offline';$('net').className=s.val()?'on':''});
 
 const Z0=(new URLSearchParams(location.search).get('z')||'').toUpperCase();
-if(C0){$('sc').value=C0;try{$('sn').value=localStorage.sn||''}catch(e){}show('sJoin')}
+if(C0){$('sb').hidden=true;$('sc').value=C0;try{$('sn').value=localStorage.sn||''}catch(e){}show('sJoin')}
 else if(Z0){try{$('zn').value=localStorage.sn||''}catch(e){}show('zJoin')}
 else auth.onAuthStateChanged(u=>{
+  if(u&&u.isAnonymous&&joining)return;
   const t=u&&!u.isAnonymous;show(t?'tDash':'tLogin');
   if(t){$('rs').hidden=!localStorage.room;loadMy()}
 });
@@ -120,9 +150,27 @@ async function openRoom(old){
     await R.child('sharing').set(false);
   }else await R.set({owner:auth.currentUser.uid,created:Date.now(),sharing:false});
   localStorage.room=c;$('rc').textContent=c;
-  const url=location.origin+location.pathname+'?c='+c;$('ju').textContent=url;
+  const url=location.origin+location.pathname+'?c='+c;JU=url;$('ju').textContent=url;$('jbu').textContent=location.host+location.pathname.replace(/index\.html$/,'');$('jbc').textContent=c;$('rwa').href='https://wa.me/?text='+encodeURIComponent(shareMsg());
   $('qr').innerHTML='';new QRCode($('qr'),{text:url,width:200,height:200});show('tRoom');listenT();
 }
+function goJoin(){
+  const c=$('hc').value.trim().toUpperCase();if(!c)return $('hc').focus();
+  $('sc').value=c;try{$('sn').value=localStorage.sn||''}catch(e){}show('sJoin');$('sn').focus();
+}
+$('hc').addEventListener('keydown',e=>e.key==='Enter'&&goJoin());
+function shareMsg(){return 'ICTPLUZ Live පන්තියට සම්බන්ධ වන්න\nකේතය: '+$('rc').textContent+'\n'+JU}
+function nativeShare(){
+  if(navigator.share)navigator.share({title:'ICTPLUZ Live Class',text:shareMsg()}).catch(()=>{});
+  else navigator.clipboard.writeText(shareMsg()).then(()=>alert('පිටපත් කරන ලදී ✅'))
+}
+function bigView(){
+  $('bc').textContent=$('rc').textContent;$('bu').textContent=JU.replace(/^https?:\/\//,'');
+  $('bq').innerHTML='';new QRCode($('bq'),{text:JU,width:420,height:420});$('big').hidden=false;
+  try{$('big').requestFullscreen&&$('big').requestFullscreen().catch(()=>{})}catch(e){}
+}
+function closeBig(){$('big').hidden=true;if(document.fullscreenElement)document.exitFullscreen()}
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement)$('big').hidden=true});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeBig()});
 function copyLink(){navigator.clipboard.writeText($('ju').textContent).then(()=>alert('පිටපත් කරන ලදී ✅'))}
 function listenT(){
   R.child('students').on('value',s=>{S=s.val()||{};drawList()});
@@ -280,11 +328,11 @@ function renderQ(){
 async function sJoin(){
   const code=$('sc').value.trim().toUpperCase(),name=$('sn').value.trim().slice(0,30);if(!code||!name)return alert('කේතය සහ නම අවශ්‍යයි');
   try{
-    sid=(await auth.signInAnonymously()).user.uid;R=db.ref('rooms/'+code);
-    if(!(await R.child('owner').once('value')).exists())return alert('පන්ති කේතය වැරදියි');
+    joining=true;sid=(await auth.signInAnonymously()).user.uid;R=db.ref('rooms/'+code);
+    if(!(await R.child('owner').once('value')).exists()){joining=false;return alert('පන්ති කේතය වැරදියි')}
     try{localStorage.sn=name}catch(e){}
     await R.child('students/'+sid).update({name});$('me').textContent=name;show('sRoom');
-  }catch(e){return alert('සම්බන්ධ විය නොහැක: '+e.message)}
+  }catch(e){joining=false;return alert('සම්බන්ධ විය නොහැක: '+e.message)}
   const pr=R.child('students/'+sid+'/online');
   db.ref('.info/connected').on('value',s=>{if(s.val()){pr.onDisconnect().set(false);pr.set(true)}});
   R.child('owner').on('value',s=>{if(!s.exists()){alert('පන්තිය අවසන් විය');location.href=location.pathname}});
