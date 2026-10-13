@@ -69,7 +69,7 @@ textarea:focus{outline:2px solid var(--p);border-color:transparent}
 .sx>div{position:absolute;inset:0;display:flex;padding:5cqw 6cqw;gap:4cqw}
 .sx .tx{flex:1;min-width:0;overflow:hidden}
 .sx h2{font-size:5.2cqw;margin:0 0 3cqw;line-height:1.2;border-left:.8cqw solid var(--ac);padding-left:2cqw}
-.sx ul{margin:0;padding-left:4cqw;font-size:3.6cqw;line-height:1.35}.sx li{margin:0 0 1.4cqw}
+.sx ul{margin:0;padding-left:4cqw;font-size:calc(3.6cqw*var(--z,1));line-height:1.35}.sx li{margin:0 0 1.4cqw}
 .sx img{max-width:42%;max-height:100%;object-fit:contain;align-self:center;border-radius:1cqw;background:#fff}
 .sx.c>div{flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1.5cqw}
 .sx.c h1{font-size:8cqw;margin:0;line-height:1.15}.sx.c p{font-size:3.8cqw;margin:0;opacity:.85}
@@ -78,6 +78,35 @@ textarea:focus{outline:2px solid var(--p);border-color:transparent}
 #pm{position:fixed;inset:0;z-index:110;background:#020617;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:12px}
 #pm[hidden]{display:none}#pms{width:min(100%,calc((100vh - 90px)*16/9))}
 #pmb{display:flex;gap:10px;align-items:center;color:#fff;flex-wrap:wrap;justify-content:center}#pmb button{width:auto;margin:0;padding:8px 22px}
+
+/* ---- Presentations: advanced ---- */
+.sx b{color:var(--ac);font-weight:800}
+.sx li.s{margin-left:3.5cqw;font-size:.88em;list-style:circle;opacity:.92}
+.sx li.h,.sx p.h{visibility:hidden}
+.sx.il>div{flex-direction:row-reverse}
+.sx.q>div{flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2.5cqw;padding:5cqw 9cqw}
+.sx blockquote{margin:0;font-size:calc(5.2cqw*var(--z,1));font-style:italic;line-height:1.3}
+.sx blockquote:before{content:'\201C';color:var(--ac);font-size:1.6em;line-height:0;vertical-align:-.3em;margin-right:.1em}
+.sx cite{font-size:3.4cqw;opacity:.85;font-style:normal}
+.sx .cols{display:flex;gap:4cqw}.sx .cols ul{flex:1;min-width:0}
+.sx.an{animation:sxin .35s ease}
+@keyframes sxin{from{opacity:0;transform:translateX(4%)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.sx.an{animation:none}}
+#pm{overflow:hidden}
+#pg{position:absolute;top:0;left:0;right:0;height:4px;background:#ffffff22}#pg i{display:block;height:100%;width:0;background:#38bdf8;transition:width .3s}
+#pmn{width:min(100%,900px);background:#1e293bf2;color:#f8fafc;border-radius:10px;padding:10px 14px;font-size:.95rem;white-space:pre-wrap;max-height:20vh;overflow:auto}
+#pm.nt #pms{width:min(100%,calc((100vh - 220px)*16/9))}
+#pmo{position:absolute;inset:0;z-index:2;background:#020617f5;overflow:auto;padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;align-content:start}
+#pmo[hidden],#pmk[hidden],#pmn[hidden],#pmd[hidden]{display:none}
+.pot{cursor:pointer;border-radius:12px;padding:4px;outline:3px solid transparent}.pot.cur{outline-color:#38bdf8}.pot .sx{pointer-events:none}.pot small{color:#cbd5e1}
+#pmk{position:absolute;inset:0;z-index:3;background:#000;cursor:pointer}
+#pmd{position:fixed;width:18px;height:18px;border-radius:50%;background:#ef4444;box-shadow:0 0 14px 6px #ef4444aa;pointer-events:none;z-index:5;transform:translate(-50%,-50%)}
+#pm.lz,#pm.lz *{cursor:none}
+#pmb button.ic{padding:8px 12px}#pmt{opacity:.75}
+#prt{display:none}
+@media print{@page{size:297mm 167mm;margin:0}
+body.pr>*:not(#prt){display:none!important}body.pr #prt{display:block}
+#prt .sx{width:297mm;height:167mm;aspect-ratio:auto;border-radius:0;box-shadow:none;break-after:page;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 </style></head><body>
 <header><span>ICTPLUZ Smart Classroom</span><span id="net">Offline</span></header>
 <div id="jb" hidden><span>Join at <b id="jbu"></b></span><span>Code:</span><span class="code" id="jbc" style="font-size:1.5rem;letter-spacing:4px"></span><button onclick="bigView()">QR ▦</button></div>
@@ -146,16 +175,19 @@ textarea:focus{outline:2px solid var(--p);border-color:transparent}
 <input id="pt" placeholder="Presentation නම" maxlength="80"></div>
 <div class="card"><div id="pch" class="row" style="flex-wrap:wrap"></div></div>
 <div class="g"><div class="card">
-<select id="psl" onchange="upd()"><option value="b">මාතෘකාව + ලක්ෂ්‍ය (Bullets)</option><option value="c">මැද මාතෘකාව (Title / Section)</option></select>
+<select id="psl" onchange="upd()"><option value="b">මාතෘකාව + ලක්ෂ්‍ය (Bullets)</option><option value="c">මැද මාතෘකාව (Title / Section)</option><option value="t">තීරු දෙකක් (Two columns)</option><option value="q">උද්ධෘතය (Quote)</option></select>
 <input id="pst" placeholder="Slide මාතෘකාව" oninput="upd()" maxlength="120">
 <textarea id="psb" rows="6" placeholder="ලක්ෂ්‍ය ලියන්න" oninput="upd()" maxlength="1500"></textarea>
-<small>එක් පේළියක් = එක් ලක්ෂ්‍යයක් (මැද මාතෘකා layout එකේදී උප මාතෘකාව)</small>
+<small>එක් පේළියක් = එක් ලක්ෂ්‍යයක් · <b>**ඝන**</b> අකුරු · උප ලක්ෂ්‍යයට පේළිය ආරම්භයේ &gt; යොදන්න · තීරු දෙකේදී වම/දකුණ වෙන් කිරීමට --- පේළියක් · උද්ධෘතයේදී පළමු පේළිය = කතුවරයා</small>
 <div id="pcs" class="row" style="flex-wrap:wrap;margin:8px 0"></div>
+<div class="row"><select id="pzs" onchange="upd()" aria-label="අකුරු ප්‍රමාණය"><option value="0">අකුරු: කුඩා</option><option value="1">අකුරු: සාමාන්‍ය</option><option value="2">අකුරු: විශාල</option></select><select id="pip" onchange="upd()" aria-label="පින්තූරයේ පිහිටීම"><option value="r">පින්තූරය දකුණේ</option><option value="l">පින්තූරය වමේ</option></select></div>
+<label style="display:flex;gap:8px;align-items:center;margin:6px 0"><input type="checkbox" id="prv" onchange="upd()" style="width:auto;margin:0"> ලක්ෂ්‍ය එකින් එක පෙන්වන්න (Reveal)</label>
+<textarea id="pnt" rows="3" placeholder="🗒 කථික සටහන් (ගුරුවරයාට පමණි — සිසුන්ට නොපෙනේ)" oninput="upd()" maxlength="1000"></textarea>
 <div class="row"><button class="g2" onclick="$('pfi').click()">🖼 පින්තූරයක් එක් කරන්න</button><button class="g2" id="pxi" onclick="deckD.slides[bsi].img='';bDeck()">පින්තූරය ඉවත් කරන්න</button></div>
 <input id="pfi" type="file" accept="image/*" hidden onchange="pImg(this)"></div>
 <div class="card"><div id="ppv"></div>
 <div class="row"><button class="g2" onclick="mvSl(-1)" aria-label="ඉහළට">↑</button><button class="g2" onclick="mvSl(1)" aria-label="පහළට">↓</button><button class="g2" onclick="dupSl()">පිටපතක්</button><button class="r" onclick="delSl()">මකන්න</button></div></div></div>
-<div class="card"><div class="row"><button onclick="savePres()">සුරකින්න</button><button class="g2" onclick="savePres(1)">සුරකින්න &amp; Present</button></div></div>
+<div class="card"><div class="row"><button onclick="savePres()">සුරකින්න</button><button class="g2" onclick="savePres(1)">සුරකින්න &amp; Present</button><button class="g2" onclick="printDeck(deckD.slides.filter(s=>s.t.trim()||s.b.trim()||s.img))">🖨 PDF / Print</button></div></div>
 <button class="o" onclick="show('tDash')">← ආපසු</button></div>
 
 <div class="v" id="pRun" hidden><div class="card"><b id="ph"></b> <span id="pp" style="float:right"></span></div>
@@ -163,7 +195,8 @@ textarea:focus{outline:2px solid var(--p);border-color:transparent}
 <div class="row"><button class="g2" onclick="pNav(-1)">← කලින්</button><button onclick="pNav(1)">ඊළඟ →</button></div>
 <button class="o" style="text-align:center" onclick="$('ps').requestFullscreen&&$('ps').requestFullscreen()">සම්පූර්ණ තිරය</button></div></div>
 
-<div id="pm" hidden><div id="pms"></div><div id="pmb"><button class="g2" onclick="pmGo(-1)" aria-label="කලින් slide">◀</button><span id="pmc"></span><button class="g2" onclick="pmGo(1)" aria-label="ඊළඟ slide">▶</button><button class="r" onclick="pmExit()">වසන්න ✕</button></div></div>
+<div id="pm" hidden><div id="pg"><i></i></div><div id="pms"></div><div id="pmn" hidden></div><div id="pmb"><button class="g2" onclick="pmGo(-1)" aria-label="කලින් slide">◀</button><span id="pmc"></span><span id="pmt"></span><button class="g2" onclick="pmGo(1)" aria-label="ඊළඟ slide">▶</button><button class="g2 ic" onclick="pmOv()" title="සියලු slides (G)" aria-label="සියලු slides">▦</button><button class="g2 ic" onclick="pmBlack()" title="Blackout (B)" aria-label="තිරය කළු කරන්න">⬛</button><button class="g2 ic" onclick="pmLaser()" title="Laser (L)" aria-label="Laser pointer">🔴</button><button class="g2 ic" onclick="pmNotes()" title="සටහන් (N)" aria-label="කථික සටහන්">🗒</button><button class="g2 ic" onclick="printDeck(PD)" title="PDF / Print" aria-label="Print">🖨</button><button class="r" onclick="pmExit()">වසන්න ✕</button></div><div id="pmo" hidden></div><div id="pmk" hidden onclick="this.hidden=true"></div><div id="pmd" hidden></div></div>
+<div id="prt"></div>
 
 <div id="big" hidden><div style="font-weight:700">ICTPLUZ Live පන්තියට සම්බන්ධ වන්න</div><div id="bq"></div>
 <div>QR scan කරන්න, නැතහොත් කේතය ඇතුළත් කරන්න</div><div class="code" id="bc"></div><small id="bu"></small>
@@ -1467,7 +1500,7 @@ const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
 const C0=(new URLSearchParams(location.search).get('c')||'').toUpperCase();
 let R,Q,A={},S={},stream,sid,pcs={},watched={},q0,my,spc,JU='',joining=false;
 let RT={},SS={},RA=null,rh=null,rtok=0;
-let deckD={slides:[]},bsi=0,editId=null,PC={},PD=null,pi=0,PV=null,pvi=0,SD=null,SI=null;
+let deckD={slides:[]},bsi=0,editId=null,PC={},PD=null,pi=0,PV=null,pvi=0,SD=null,SI=null,pStep=0,pNts=[],tmT=0,tmI=null,lastI=-1,sStep=0,sLast=-1,lzOn=false,ntOn=false;
 
 db.ref('.info/connected').on('value',s=>{$('net').textContent=s.val()?'Online':'Offline';$('net').className=s.val()?'on':''});
 
@@ -1792,21 +1825,33 @@ function endClass(){
 
 /* ---------- Presentations ---------- */
 const TH=[{bg:'#ffffff',fg:'#0f172a',ac:'#2563eb'},{bg:'#1e3a8a',fg:'#ffffff',ac:'#93c5fd'},{bg:'#065f46',fg:'#ffffff',ac:'#6ee7b7'},{bg:'#0f172a',fg:'#f8fafc',ac:'#fbbf24'},{bg:'#fef3c7',fg:'#78350f',ac:'#d97706'}];
-function slideHTML(s){
-  s=s||{};const th=TH[s.c]||TH[0],img=okImg(s.img)?s.img:'',L=String(s.b||'').split('\n').map(x=>x.trim()).filter(Boolean),im=img?`<img src="${esc(img)}" alt="">`:'';
-  const inner=s.l=='c'
-    ?`<div><h1>${esc(s.t||'')}</h1>${L.map(x=>`<p>${esc(x)}</p>`).join('')}${im}</div>`
-    :`<div><div class="tx">${s.t?`<h2>${esc(s.t)}</h2>`:''}<ul>${L.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>${im}</div>`;
-  return `<div class="sx${s.l=='c'?' c':''}" style="background:${th.bg};color:${th.fg};--ac:${th.ac}">${inner}</div>`;
+const ZS=[.85,1,1.25],fmB=x=>esc(x).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+const slLines=b=>String(b||'').split('\n').filter(x=>x.trim());
+const pItem=x=>{const m=/^(\s{2,}|>\s*)(.*)$/.exec(x);return m?{t:m[2].trim(),s:1}:{t:x.trim(),s:0}};
+function sCols(s){const L=slLines(s.b);let c=[L];if(s.l=='t'){const i=L.findIndex(x=>x.trim()=='---');c=i<0?[L,[]]:[L.slice(0,i),L.slice(i+1)]}return c.map(a=>a.map(pItem))}
+const slideN=s=>s&&(s.l=='b'||s.l=='t')?sCols(s).reduce((a,c)=>a+c.length,0):0;
+const hasRv=s=>!!(s&&s.r)&&slideN(s)>0;
+/* step: how many bullets are visible (only when slide.r); an: play entrance animation */
+function slideHTML(s,step,an){
+  s=s||{};const th=TH[s.c]||TH[0],img=okImg(s.img)?s.img:'',lay=(s.l=='c'||s.l=='t'||s.l=='q')?s.l:'b',im=img?`<img src="${esc(img)}" alt="">`:'',
+    rv=!!s.r&&Number.isInteger(step);let k=0;
+  const li=it=>{const h=rv&&k>=step;k++;return `<li class="${it.s?'s':''}${h?' h':''}">${fmB(it.t)}</li>`};
+  const ttl=s.t?`<h2>${fmB(s.t)}</h2>`:'';let inner;
+  if(lay=='c'){const L=slLines(s.b).map(x=>pItem(x).t);inner=`<div><h1>${fmB(s.t||'')}</h1>${L.map(x=>`<p>${fmB(x)}</p>`).join('')}${im}</div>`}
+  else if(lay=='q'){const a=slLines(s.b)[0];inner=`<div><blockquote>${fmB(s.t||'')}</blockquote>${a?`<cite>— ${fmB(pItem(a).t)}</cite>`:''}</div>`}
+  else if(lay=='t'){const [a,b]=sCols(s);inner=`<div><div class="tx">${ttl}<div class="cols"><ul>${a.map(li).join('')}</ul><ul>${b.map(li).join('')}</ul></div></div></div>`}
+  else{const [a]=sCols(s);inner=`<div><div class="tx">${ttl}<ul>${a.map(li).join('')}</ul></div>${im}</div>`}
+  return `<div class="sx${lay=='b'?'':' '+lay}${lay=='b'&&s.ip=='l'?' il':''}${an?' an':''}" style="background:${th.bg};color:${th.fg};--ac:${th.ac};--z:${ZS[s.z]||1}">${inner}</div>`;
 }
 /* builder */
-const newSlide=(c)=>({l:'b',t:'',b:'',c:c||0,img:''});
+const newSlide=(c)=>({l:'b',t:'',b:'',c:c||0,img:'',ip:'r',z:1,r:0,n:''});
 function newDeck(){editId=null;deckD={slides:[newSlide()]};bsi=0;$('pt').value='';bDeck();show('tSlides')}
 async function editPres(id){
   try{
     const p=(await db.ref('presentations/'+id).once('value')).val();
     if(!p||!Array.isArray(p.slides))return alert('Presentation එක හමු නොවීය');
-    editId=id;deckD={slides:p.slides.map(s=>({l:s.l=='c'?'c':'b',t:s.t||'',b:s.b||'',c:TH[s.c]?s.c:0,img:okImg(s.img)?s.img:''}))};
+    let n=[];try{const v=(await db.ref('users/'+auth.currentUser.uid+'/pnotes/'+id).once('value')).val();if(v&&typeof v=='object')n=Object.assign([],v)}catch(e){}
+    editId=id;deckD={slides:p.slides.map((s,i)=>({l:['c','t','q'].includes(s.l)?s.l:'b',t:s.t||'',b:s.b||'',c:TH[s.c]?s.c:0,img:okImg(s.img)?s.img:'',ip:s.ip=='l'?'l':'r',z:[0,1,2].includes(s.z)?s.z:1,r:s.r?1:0,n:String(n[i]||'')}))};
     bsi=0;$('pt').value=p.title||'';bDeck();show('tSlides');
   }catch(e){alert('පූරණය අසාර්ථකයි: '+(e.message||e.code))}
 }
@@ -1815,9 +1860,9 @@ function bDeck(){
   $('pch').innerHTML=deckD.slides.map((x,i)=>`<button class="${i==bsi?'':'o'}" style="width:auto;margin:0;padding:6px 14px;text-align:center" onclick="bsi=${i};bDeck()">${i+1}</button>`).join('')+'<button class="g2" style="width:auto;margin:0;padding:6px 14px" onclick="addSl()">+ Slide</button>';
   $('psl').value=s.l;$('pst').value=s.t;$('psb').value=s.b;
   $('pcs').innerHTML=TH.map((h,i)=>`<button aria-label="වර්ණය ${i+1}" onclick="setC(${i})" style="width:34px;height:34px;padding:0;margin:0;flex:none;border-radius:50%;background:${h.bg};border:3px solid ${i==(s.c||0)?'var(--p)':'#94a3b8'}"></button>`).join('');
-  $('pxi').hidden=!s.img;$('ppv').innerHTML=slideHTML(s);
+  $('pxi').hidden=!s.img;$('pzs').value=String(s.z==null?1:s.z);$('pip').value=s.ip=='l'?'l':'r';$('prv').checked=!!s.r;$('pnt').value=s.n||'';$('ppv').innerHTML=slideHTML(s);
 }
-function upd(){const s=deckD.slides[bsi];s.l=$('psl').value;s.t=$('pst').value;s.b=$('psb').value;$('ppv').innerHTML=slideHTML(s)}
+function upd(){const s=deckD.slides[bsi];s.l=$('psl').value;s.t=$('pst').value;s.b=$('psb').value;s.z=+$('pzs').value;s.ip=$('pip').value;s.r=$('prv').checked?1:0;s.n=$('pnt').value;$('ppv').innerHTML=slideHTML(s)}
 function setC(i){deckD.slides[bsi].c=i;bDeck()}
 function addSl(){deckD.slides.splice(bsi+1,0,newSlide(deckD.slides[bsi].c));bsi++;bDeck()}
 function dupSl(){deckD.slides.splice(bsi+1,0,{...deckD.slides[bsi]});bsi++;bDeck()}
@@ -1837,11 +1882,15 @@ function pImg(inp){
 async function savePres(go){
   const ti=$('pt').value.trim(),sl=deckD.slides.filter(s=>s.t.trim()||s.b.trim()||s.img);
   if(!ti||!sl.length)return alert('Presentation නම සහ අවම slide 1ක් (අන්තර්ගතයක් සහිත) අවශ්‍යයි');
-  const id=editId||rid(),u=auth.currentUser.uid;
-  try{await db.ref('presentations/'+id).set({owner:u,title:ti,slides:sl,created:Date.now()});await db.ref('users/'+u+'/presentations/'+id).set(ti)}
+  const id=editId||rid(),u=auth.currentUser.uid,nts=sl.map(s=>String(s.n||'').trim()),
+    slo=sl.map(s=>({l:s.l,t:s.t,b:s.b,c:s.c,img:s.img,ip:s.ip=='l'?'l':'r',z:[0,1,2].includes(s.z)?s.z:1,r:s.r?1:0}));
+  try{await db.ref('presentations/'+id).set({owner:u,title:ti,slides:slo,created:Date.now()});await db.ref('users/'+u+'/presentations/'+id).set(ti)}
   catch(e){return alert('සුරැකීම අසාර්ථකයි: '+(e.code==='PERMISSION_DENIED'?'Database Rules වල "presentations" සහ "users/…/presentations" ලිවීමට ඉඩ දෙන්න.':e.message))}
+  let nErr=false;
+  try{const nr=db.ref('users/'+u+'/pnotes/'+id);if(nts.some(Boolean))await nr.set(nts);else await nr.remove()}catch(e){nErr=true}
   editId=null;deckD={slides:[]};await loadPres();show('tDash');
-  if(go)present(id);else alert('සුරකින ලදී ✅');
+  if(nErr)alert('Presentation සුරකින ලදී, නමුත් කථික සටහන් සුරැකීමට නොහැකි විය. Database Rules වල "users/…/pnotes" ලිවීමට ඉඩ දෙන්න.');
+  if(go)present(id);else if(!nErr)alert('සුරකින ලදී ✅');
 }
 function loadPres(){
   return db.ref('users/'+auth.currentUser.uid+'/presentations').once('value').then(s=>{PC=s.val()||{};
@@ -1854,6 +1903,7 @@ function drawRoomPres(){
 async function delPres(id){
   if(!confirm('මේ Presentation එක මකන්නද?'))return;
   try{await db.ref('presentations/'+id).remove();await db.ref('users/'+auth.currentUser.uid+'/presentations/'+id).remove()}catch(e){return alert('මැකීම අසාර්ථකයි: '+(e.message||e.code))}
+  db.ref('users/'+auth.currentUser.uid+'/pnotes/'+id).remove().catch(()=>{});
   loadPres();
 }
 function sharePres(id){
@@ -1865,22 +1915,62 @@ async function present(id){
   let p;
   try{p=(await db.ref('presentations/'+id).once('value')).val()}catch(e){return alert('පූරණය අසාර්ථකයි: '+(e.message||e.code))}
   if(!p||!Array.isArray(p.slides)||!p.slides.length)return alert('Presentation එක හමු නොවීය');
-  PD=p.slides;pi=0;
-  if(R)R.child('deck').set({title:p.title||'',slides:PD}).then(()=>R.child('slide').set(0)).catch(e=>alert('සිසුන්ට Live යැවීම අසාර්ථකයි: '+(e.message||e.code)));
+  PD=p.slides;pi=0;pStep=0;pNts=[];lastI=-1;
+  try{const n=(await db.ref('users/'+auth.currentUser.uid+'/pnotes/'+id).once('value')).val();if(n&&typeof n=='object')pNts=Object.assign([],n)}catch(e){}
+  if(R)R.child('deck').set({title:p.title||'',slides:PD}).then(()=>pmSync()).catch(e=>alert('සිසුන්ට Live යැවීම අසාර්ථකයි: '+(e.message||e.code)));
   $('pm').hidden=false;pmDraw();
+  clearInterval(tmI);tmT=Date.now();tmI=setInterval(pmTick,1000);pmTick();
   try{$('pm').requestFullscreen&&$('pm').requestFullscreen().catch(()=>{})}catch(e){}
 }
-function pmDraw(){$('pms').innerHTML=slideHTML(PD[pi]);$('pmc').textContent=(pi+1)+' / '+PD.length+(R?' · සිසුන්ට Live':'')}
-function pmGo(d){if(!PD)return;const n=pi+d;if(n<0||n>=PD.length)return;pi=n;pmDraw();if(R)R.child('slide').set(pi)}
-function pmExit(){
-  $('pm').hidden=true;if(document.fullscreenElement)document.exitFullscreen();
-  if(R&&PD){R.child('deck').remove();R.child('slide').remove()}PD=null;
+function pmTick(){const t=Math.floor((Date.now()-tmT)/1000);$('pmt').textContent='⏱ '+String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0')}
+function pmDraw(){
+  const s=PD[pi],n=slideN(s),rv=hasRv(s);
+  $('pms').innerHTML=slideHTML(s,rv?pStep:undefined,lastI!==pi);lastI=pi;
+  $('pmc').textContent=(pi+1)+' / '+PD.length+(rv?' · '+pStep+'/'+n:'')+(R?' · සිසුන්ට Live':'');
+  $('pg').firstElementChild.style.width=((pi+1)/PD.length*100)+'%';
+  const nt=String(pNts[pi]||'').trim(),sh=ntOn&&!!nt;$('pmn').textContent=nt;$('pmn').hidden=!sh;$('pm').classList.toggle('nt',sh);
 }
+function pmSync(){
+  if(!R||!PD)return;const st=hasRv(PD[pi])?pStep:0;
+  R.update({slide:pi,step:st}).catch(()=>R.child('slide').set(pi).catch(()=>{}));
+}
+function pmGo(d){
+  if(!PD)return;const s=PD[pi],n=slideN(s),rv=hasRv(s);
+  if(d>0){if(rv&&pStep<n)pStep++;else if(pi<PD.length-1){pi++;pStep=0}else return}
+  else{if(rv&&pStep>0)pStep--;else if(pi>0){pi--;pStep=hasRv(PD[pi])?slideN(PD[pi]):0}else return}
+  pmDraw();pmSync();
+}
+function pmJump(i){if(!PD||i<0||i>=PD.length)return;pi=i;pStep=0;$('pmo').hidden=true;pmDraw();pmSync()}
+function pmOv(){
+  if(!PD)return;const o=$('pmo');if(!o.hidden){o.hidden=true;return}
+  o.innerHTML=PD.map((s,i)=>`<div class="pot${i==pi?' cur':''}" onclick="pmJump(${i})">${slideHTML(s)}<small>${i+1}</small></div>`).join('');o.hidden=false;
+}
+function pmBlack(){$('pmk').hidden=false}
+function pmLaser(){lzOn=!lzOn;$('pmd').hidden=!lzOn;$('pm').classList.toggle('lz',lzOn)}
+function pmNotes(){ntOn=!ntOn;if(PD)pmDraw()}
+function printDeck(sl){
+  if(!sl||!sl.length)return;
+  const go=()=>{$('prt').innerHTML=sl.map(s=>slideHTML(s)).join('');document.body.classList.add('pr');setTimeout(()=>window.print(),200)};
+  if(document.fullscreenElement)document.exitFullscreen().catch(()=>{}).then(()=>setTimeout(go,300));else go();
+}
+window.addEventListener('afterprint',()=>{document.body.classList.remove('pr');$('prt').innerHTML=''});
+function pmExit(){
+  clearInterval(tmI);$('pmo').hidden=true;$('pmk').hidden=true;$('pmd').hidden=true;lzOn=false;$('pm').classList.remove('lz');
+  $('pm').hidden=true;if(document.fullscreenElement)document.exitFullscreen();
+  if(R&&PD){R.child('deck').remove();R.child('slide').remove();R.child('step').remove()}PD=null;
+}
+$('pm').addEventListener('pointermove',e=>{if(!lzOn)return;const d=$('pmd');d.style.left=e.clientX+'px';d.style.top=e.clientY+'px'});
+(()=>{let x0=null;const e=$('pms');
+  e.addEventListener('touchstart',t=>{x0=t.touches[0].clientX},{passive:true});
+  e.addEventListener('touchend',t=>{if(x0==null)return;const dx=t.changedTouches[0].clientX-x0;x0=null;if(Math.abs(dx)>60)pmGo(dx<0?1:-1)});
+})();
 /* student: follow teacher's slide */
 function sdDraw(){
   const e=$('sd');
-  if(!SD||!Array.isArray(SD.slides)||!Number.isInteger(SI)||!SD.slides[SI]){e.hidden=true;return}
-  e.hidden=false;$('sds').innerHTML=slideHTML(SD.slides[SI]);$('sdc').textContent=(SD.title?SD.title+' · ':'')+(SI+1)+' / '+SD.slides.length;
+  if(!SD||!Array.isArray(SD.slides)||!Number.isInteger(SI)||!SD.slides[SI]){e.hidden=true;sLast=-1;return}
+  const sl=SD.slides[SI];e.hidden=false;
+  $('sds').innerHTML=slideHTML(sl,hasRv(sl)?sStep:undefined,sLast!==SI);sLast=SI;
+  $('sdc').textContent=(SD.title?SD.title+' · ':'')+(SI+1)+' / '+SD.slides.length;
 }
 /* self-paced viewer (?p=ID) */
 async function pStart(){
@@ -1893,11 +1983,18 @@ async function pStart(){
   if(!PV||!Array.isArray(PV.slides)){$('ph').textContent='Presentation එක හමු නොවීය';return}
   $('ph').textContent=PV.title||'';pvi=0;pDraw();
 }
-function pDraw(){$('ps').innerHTML=slideHTML(PV.slides[pvi]);$('pp').textContent=(pvi+1)+' / '+PV.slides.length}
+function pDraw(){$('ps').innerHTML=slideHTML(PV.slides[pvi],undefined,true);$('pp').textContent=(pvi+1)+' / '+PV.slides.length}
 function pNav(d){if(!PV)return;const n=pvi+d;if(n<0||n>=PV.slides.length)return;pvi=n;pDraw()}
 document.addEventListener('keydown',e=>{
-  const k=e.key,nx=k=='ArrowRight'||k=='PageDown'||k==' ',pv=k=='ArrowLeft'||k=='PageUp';
-  if(!$('pm').hidden){if(nx||pv){e.preventDefault();pmGo(nx?1:-1)}else if(k=='Escape')pmExit()}
+  const k=e.key,kk=k.toLowerCase(),nx=k=='ArrowRight'||k=='PageDown'||k==' ',pv=k=='ArrowLeft'||k=='PageUp';
+  if(!$('pm').hidden){
+    if(!$('pmk').hidden){$('pmk').hidden=true;e.preventDefault();return}
+    if(!$('pmo').hidden){if(k=='Escape'||kk=='g')$('pmo').hidden=true;return}
+    if(nx||pv){e.preventDefault();pmGo(nx?1:-1)}
+    else if(k=='Home')pmJump(0);else if(k=='End')pmJump(PD.length-1);
+    else if(kk=='g')pmOv();else if(kk=='b'||k=='.')pmBlack();else if(kk=='l')pmLaser();else if(kk=='n')pmNotes();
+    else if(k=='Escape')pmExit();
+  }
   else if(!$('pRun').hidden&&(nx||pv)){e.preventDefault();pNav(nx?1:-1)}
 });
 
@@ -1937,6 +2034,7 @@ async function sJoin(){
   R.child('answers/'+sid).on('value',s=>{my=s.val();renderQ()});
   R.child('q').on('value',s=>{q0=s.val();renderQ()});
   R.child('deck').on('value',s=>{SD=s.val();sdDraw()});
+  R.child('step').on('value',s=>{sStep=Number.isInteger(s.val())?s.val():0;sdDraw()});
   R.child('slide').on('value',s=>{SI=s.val();sdDraw()});
 }
 </script></body></html>
