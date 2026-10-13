@@ -38,6 +38,29 @@ footer .n{font-weight:800;font-size:.95rem;letter-spacing:1px}
 .ok{color:var(--ok);font-weight:700}.bad{color:var(--bad);font-weight:700}
 #sl{max-height:260px;overflow:auto}
 .ro{display:flex;align-items:center}.ro .qo{flex:1}.btn{display:block;text-align:center;background:#16a34a;color:#fff;text-decoration:none;padding:10px;border-radius:8px;margin:4px 0}
+
+/* ---- Drawing: rating + podium ---- */
+.rg{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));margin:10px 0}
+.rc{background:#f8fafc;border:1px solid var(--b);border-radius:10px;padding:6px;text-align:center}
+.rc img{display:block;width:100%;aspect-ratio:1;object-fit:contain;background:#fff;border:1px solid var(--b);border-radius:8px;cursor:zoom-in}
+.rc .lbl{font-size:.8rem;color:#475569;margin:4px 0 0}
+.stars{display:flex}.stars button{flex:1;width:auto;margin:0;padding:6px 0;background:none;color:#cbd5e1;font-size:1.5rem;line-height:1;border:0;touch-action:manipulation}
+.stars button.on{color:#f59e0b}.stars button:focus-visible{outline:2px solid var(--p);outline-offset:-2px}
+.pod{display:flex;align-items:flex-end;justify-content:center;gap:8px;margin:14px 0 8px}
+.pc{flex:1;max-width:220px;min-width:0;display:flex;flex-direction:column;align-items:center}
+.pc img{width:min(100%,180px);aspect-ratio:1;object-fit:contain;background:#fff;border:3px solid var(--b);border-radius:10px;cursor:zoom-in}
+.pc .nm{font-weight:700;margin-top:6px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc .sc{font-size:.85rem;color:#475569;margin-bottom:6px}
+.blk{width:100%;display:flex;align-items:flex-start;justify-content:center;font-size:2rem;padding-top:6px;border-radius:8px 8px 0 0;transform-origin:bottom;animation:up .7s ease-out both}
+.p1 .blk{height:130px;background:linear-gradient(#fbbf24,#d97706)}.p1 img{border-color:#f59e0b}
+.p2 .blk{height:95px;background:linear-gradient(#cbd5e1,#64748b);animation-delay:.2s}.p2 img{border-color:#94a3b8}
+.p3 .blk{height:70px;background:linear-gradient(#fdba74,#b45309);animation-delay:.4s}.p3 img{border-color:#c2763a}
+@keyframes up{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@media(prefers-reduced-motion:reduce){.blk{animation:none}}
+.rk{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #e2e8f0}
+.rk img{width:56px;height:56px;object-fit:contain;background:#fff;border:1px solid var(--b);border-radius:6px;cursor:zoom-in}.rk b{margin-left:auto;white-space:nowrap}
+#lbx{position:fixed;inset:0;z-index:120;background:#000c;display:flex;align-items:center;justify-content:center;padding:16px;cursor:zoom-out}
+#lbx[hidden]{display:none}#lbx img{max-width:100%;max-height:100%;background:#fff;border-radius:10px}
 </style></head><body>
 <header><span>ICTPLUZ Smart Classroom</span><span id="net">Offline</span></header>
 <div id="jb" hidden><span>Join at <b id="jbu"></b></span><span>Code:</span><span class="code" id="jbc" style="font-size:1.5rem;letter-spacing:4px"></span><button onclick="bigView()">QR ▦</button></div>
@@ -101,6 +124,8 @@ footer .n{font-weight:800;font-size:.95rem;letter-spacing:1px}
 <div id="big" hidden><div style="font-weight:700">ICTPLUZ Live පන්තියට සම්බන්ධ වන්න</div><div id="bq"></div>
 <div>QR scan කරන්න, නැතහොත් කේතය ඇතුළත් කරන්න</div><div class="code" id="bc"></div><small id="bu"></small>
 <button class="r" onclick="closeBig()">වසන්න ✕</button></div>
+
+<div id="lbx" hidden onclick="this.hidden=true"><img alt=""></div>
 
 <footer><div class="n"><span style="color:#276CF5">NEXORA</span> <span style="color:#09B041">TECHNOLOGIES</span></div>
 <div>Building the Future, Digitally</div>
@@ -1397,6 +1422,7 @@ const show=id=>{['tLogin','tDash','tRoom','sJoin','sRoom','tBuild','tShare','zJo
 const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
 const C0=(new URLSearchParams(location.search).get('c')||'').toUpperCase();
 let R,Q,A={},S={},stream,sid,pcs={},watched={},q0,my,spc,JU='',joining=false;
+let RT={},SS={},RA=null,rh=null,rtok=0;
 
 db.ref('.info/connected').on('value',s=>{$('net').textContent=s.val()?'Online':'Offline';$('net').className=s.val()?'on':''});
 
@@ -1469,6 +1495,7 @@ function listenT(){
   R.child('students').on('value',s=>{S=s.val()||{};drawList()});
   R.child('q').on('value',s=>{Q=s.val();drawRes();drawList()});
   R.child('answers').on('value',s=>{A=s.val()||{};drawRes();drawList()});
+  R.child('ratings').on('value',s=>{RT=s.val()||{};Q&&Q.t=='draw'&&Q.podium?drawRes():updProg()});
   R.child('sig').on('child_added',s=>watch(s.key));
 }
 function drawList(){
@@ -1504,7 +1531,7 @@ const rid=()=>{const L='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let c='';for(let i=0;i
 const norm=x=>String(x).trim().toLowerCase();
 const TL={mcq:'MCQ',tf:'සත්‍ය/අසත්‍ය',multi:'බහු පිළිතුරු',text:'කෙටි පිළිතුර',poll:'Poll'};
 const HINT={mcq:'නිවැරදි පිළිතුර ලකුණු කරන්න',tf:'නිවැරදි පිළිතුර ලකුණු කරන්න',multi:'නිවැරදි සියල්ල ලකුණු කරන්න',text:'පිළිගත හැකි පිළිතුරු (ලොකු/කුඩා අකුරු නොගැටේ)',poll:'ලකුණු නැත – අදහස් එකතු කිරීමට පමණි'};
-const NEW=['cloud','open','draw'];Object.assign(TL,{cloud:'Word Cloud',open:'විවෘත',draw:'චිත්‍ර'});Object.assign(HINT,{cloud:'සිසුන් එක් වචනයක්/වාක්‍ය ඛණ්ඩයක් යවයි – ලකුණු නැත',open:'සිසුන් තම අදහස් ලියයි – ලකුණු නැත',draw:'සිසුන් චිත්‍රයක් ඇඳ යවයි – ලකුණු නැත'});
+const NEW=['cloud','open','draw'];Object.assign(TL,{cloud:'Word Cloud',open:'විවෘත',draw:'චිත්‍ර'});Object.assign(HINT,{cloud:'සිසුන් එක් වචනයක්/වාක්‍ය ඛණ්ඩයක් යවයි – ලකුණු නැත',open:'සිසුන් තම අදහස් ලියයි – ලකුණු නැත',draw:'සිසුන් චිත්‍රයක් ඇඳ යවයි → අනෙක් සිසුන් ⭐ Rating දෙයි → හොඳම 3 Podium එකේ පෙන්වයි'});
 let draft=[];
 function grade(q,a){
   if(a==null)return 0;const t=q.t||'mcq';
@@ -1531,7 +1558,7 @@ function readQ(){
 function sendQ(){
   if(!R)return alert('Live යැවීමට පළමුව පන්තියක් ආරම්භ කරන්න');
   const q=readQ();if(!q)return;
-  R.child('answers').remove();R.child('q').set({...q,id:Date.now(),open:true});$('qt').value='';bType();show('tRoom');
+  R.child('answers').remove();R.child('ratings').remove();R.child('q').set({...q,id:Date.now(),open:true});$('qt').value='';bType();show('tRoom');
 }
 async function closeQ(){
   if(!R)return alert('පන්තියක් ආරම්භ කර නැත');
@@ -1539,7 +1566,7 @@ async function closeQ(){
   if(!Q.open)return alert('මේ ප්‍රශ්නය දැනටමත් වසා ඇත. අලුත් ප්‍රශ්නයක් යවන්න.');
   const q=Q,ans=Object.entries(A).filter(([,x])=>x.q==q.id);
   try{
-    await Promise.race([R.child('q/open').set(false),new Promise((_,j)=>setTimeout(()=>j({code:'timeout'}),8000))]);
+    await Promise.race([q.t=='draw'?R.child('q').update({open:false,rate:true}):R.child('q/open').set(false),new Promise((_,j)=>setTimeout(()=>j({code:'timeout'}),8000))]);
     await Promise.all(ans.filter(([,x])=>grade(q,x.a)).map(([id])=>R.child('students/'+id+'/score').transaction(v=>(v||0)+1)));
     const g=ans.filter(([,x])=>grade(q,x.a)).length;
     if(!NEW.includes(q.t)&&q.t!='poll')alert('ප්‍රශ්නය වසා ඇත. නිවැරදි පිළිතුරු: '+g+' / '+ans.length);
@@ -1552,13 +1579,80 @@ function drawRes(){
     if(t=='cloud'){const m={};n.forEach(x=>{const k=norm(x.a);if(k)m[k]=(m[k]||0)+1});const mx=Math.max(1,...Object.values(m));
       b='<div style="display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;align-items:center;padding:12px;background:#f8fafc;border-radius:8px">'+Object.entries(m).map(([k,c])=>`<span style="font-size:${16+c/mx*40}px;font-weight:700;color:hsl(${[...k].reduce((a,ch)=>a+ch.charCodeAt(0),0)*47%360},65%,40%)">${esc(k)}</span>`).join('')+'</div>'}
     else if(t=='open')b=n.map(x=>`<div class="bar">${esc(x.a)}</div>`).join('');
-    else b='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">'+n.map(x=>`<img src="${esc(x.a)}" style="width:100%;background:#fff;border:1px solid var(--b);border-radius:8px">`).join('')+'</div>';
+    else{drawArtRes();return}
     $('res').innerHTML=`<p><b>${esc(Q.text)}</b> <small>(${TL[t]}) පිළිතුරු ${n.length}</small></p>`+b;return}
   if(t=='text'){const m={};n.forEach(x=>{const k=norm(x.a);m[k]=(m[k]||0)+1});b=Object.entries(m).map(([k,c])=>`<div class="bar">${esc(k)} — ${c}</div>`).join('')}
   else b=Q.opts.map((o,i)=>{
     const c=n.filter(x=>t=='multi'?(x.a||[]).includes(i):x.a==i).length,p=n.length?c*100/n.length:0,ok=!Q.open&&t!='poll'&&(t=='multi'?Q.ans.includes(i):i==Q.ans);
     return `<div class="bar">${esc(o)}${ok?' ✅':''} — ${c}<i style="width:${p}%"></i></div>`}).join('');
   $('res').innerHTML=`<p><b>${esc(Q.text)}</b> <small>(${TL[t]}) පිළිතුරු ${n.length}</small></p>`+b;
+}
+
+/* ---- Drawing: rating & podium ---- */
+const okImg=a=>typeof a=='string'&&/^data:image\/(jpeg|png);base64,/.test(a);
+const hs=t=>{let h=7;for(const c of t)h=(h*31+c.charCodeAt(0))|0;return h};
+function zoom(i){const l=$('lbx');l.querySelector('img').src=i.src;l.hidden=false}
+function rankArt(e,rt){
+  const sum={},cnt={};
+  Object.entries(rt||{}).forEach(([rater,m])=>{if(!m||typeof m!='object')return;
+    Object.entries(m).forEach(([t,v])=>{if(t==rater||!Number.isInteger(v)||v<1||v>5)return;sum[t]=(sum[t]||0)+v;cnt[t]=(cnt[t]||0)+1})});
+  return e.map(([id,x])=>({id,img:x.a,n:cnt[id]||0,avg:cnt[id]?sum[id]/cnt[id]:0})).sort((a,b)=>b.avg-a.avg||b.n-a.n);
+}
+function podiumHTML(rows,N,me){
+  const rated=rows.filter(r=>r.n>0),rest=rows.filter(r=>!r.n);
+  if(!rated.length)return '<p>තවම Rating කිසිවක් ලැබී නැත.</p>';
+  const nm=id=>esc((N[id]||{}).name||'—')+(id==me?' (ඔබ)':''),f=r=>`${r.avg.toFixed(1)} ★ <small>(${r.n})</small>`;
+  const top=rated.slice(0,3);
+  let h='<h3>🏆 හොඳම චිත්‍ර 3</h3><div class="pod">'+[1,0,2].map(i=>{const r=top[i];if(!r)return '<div class="pc"></div>';
+    return `<div class="pc p${i+1}"><img src="${esc(r.img)}" alt="" onclick="zoom(this)"><div class="nm">${nm(r.id)}</div><div class="sc">${f(r)}</div><div class="blk">${['🥇','🥈','🥉'][i]}</div></div>`}).join('')+'</div>';
+  const li=(r,k)=>`<div class="rk"><span>${k}</span><img src="${esc(r.img)}" alt="" onclick="zoom(this)"><span>${nm(r.id)}</span><b>${r.n?f(r):'Rating නැත'}</b></div>`;
+  if(rated.length>3||rest.length)h+='<h3>සම්පූර්ණ ශ්‍රේණිගත කිරීම</h3>'+rated.slice(3).map((r,i)=>li(r,i+4)).join('')+rest.map(r=>li(r,'–')).join('');
+  return h;
+}
+const rpTxt=()=>Object.keys(RT[Q.id]||{}).length+' / '+Object.values(S).filter(x=>x.online).length;
+function updProg(){const e=$('rp');if(e&&Q)e.textContent=rpTxt()}
+function startRate(){if(!R||!Q||Q.t!='draw')return;R.child('q').update({open:false,rate:true}).catch(e=>alert('දෝෂයකි: '+(e.message||e.code)))}
+function showPodium(){if(!R||!Q||Q.t!='draw')return;R.child('q').update({rate:false,podium:true}).catch(e=>alert('දෝෂයකි: '+(e.message||e.code)))}
+function drawArtRes(){
+  const q=Q,e=Object.entries(A).filter(([,x])=>x.q==q.id&&okImg(x.a));
+  let h=`<p><b>${esc(q.text)}</b> <small>(${TL.draw}) චිත්‍ර ${e.length}</small></p>`;
+  if(q.podium){$('res').innerHTML=h+podiumHTML(rankArt(e,RT[q.id]),S);return}
+  h+=q.rate?`<p>⭐ Rating ක්‍රියාත්මකයි — Rating දුන් සිසුන්: <b id="rp">${rpTxt()}</b></p><button onclick="showPodium()">🏆 Rating අවසන් කර Podium පෙන්වන්න</button>`
+           :`<button onclick="startRate()">⭐ ඇඳීම නවත්වා Rating ආරම්භ කරන්න</button>`;
+  $('res').innerHTML=h+'<div class="rg">'+e.map(([,x])=>`<div class="rc"><img src="${esc(x.a)}" alt="" onclick="zoom(this)"></div>`).join('')+'</div>';
+}
+/* ---- Student: rate others' drawings / see podium ---- */
+async function stuRate(q){
+  const b=$('qb'),tok=++rtok;
+  b.innerHTML=`<b>${esc(q.text)}</b><p>අනෙක් සිසුන්ගේ චිත්‍රවලට ⭐ 1–5 ලකුණු දෙන්න. (ඔබේ චිත්‍රයට දිය නොහැක)</p><p id="rpg"></p><div id="rgc">පූරණය වෙමින්…</div>`;
+  let a,m;
+  try{[a,m]=(await Promise.all([R.child('answers').once('value'),R.child('ratings/'+q.id+'/'+sid).once('value')])).map(x=>x.val()||{})}
+  catch(e){if(tok==rtok&&$('rgc'))$('rgc').textContent='පූරණය අසාර්ථකයි: '+(e.message||e.code);return}
+  if(tok!=rtok)return;
+  const it=Object.entries(a).filter(([id,x])=>id!=sid&&x.q==q.id&&okImg(x.a)).sort((x,y)=>hs(sid+x[0])-hs(sid+y[0])),box=$('rgc');
+  if(!it.length){box.textContent='Rating කිරීමට අනෙක් චිත්‍ර නැත. ගුරුවරයා ප්‍රතිඵල පෙන්වන තෙක් රැඳී සිටින්න…';return}
+  const paint=(d,v)=>d.querySelectorAll('button').forEach((x,i)=>x.classList.toggle('on',i<v)),
+        prog=()=>$('rpg').textContent='Rating දුන්: '+it.filter(([id])=>m[id]).length+' / '+it.length;
+  box.className='rg';
+  box.innerHTML=it.map(([id,x],i)=>`<div class="rc"><img src="${esc(x.a)}" alt="" onclick="zoom(this)"><div class="lbl">චිත්‍රය ${i+1}</div><div class="stars" data-t="${esc(id)}">${[1,2,3,4,5].map(k=>`<button data-n="${k}" aria-label="${k} / 5">★</button>`).join('')}</div></div>`).join('');
+  box.querySelectorAll('.stars').forEach(d=>paint(d,m[d.dataset.t]||0));prog();
+  box.onclick=ev=>{
+    const bt=ev.target.closest('button[data-n]');if(!bt)return;
+    const d=bt.parentNode,t=d.dataset.t,n=+bt.dataset.n,old=m[t]||0;
+    m[t]=n;paint(d,n);prog();
+    R.child('ratings/'+q.id+'/'+sid+'/'+t).set(n).catch(e=>{m[t]=old;if(!old)delete m[t];paint(d,old);prog();alert('Rating යැවීම අසාර්ථකයි: '+(e.code=='PERMISSION_DENIED'?'Database Rules මගින් ratings ලිවීම ප්‍රතික්ෂේප විය.':(e.message||e.code)))});
+  };
+}
+async function stuPodium(q){
+  const b=$('qb'),tok=++rtok;
+  b.innerHTML=`<b>${esc(q.text)}</b><div id="pdm">පූරණය වෙමින්…</div>`;
+  let a;
+  try{if(!RA||RA.id!=q.id)RA={id:q.id,d:(await R.child('answers').once('value')).val()||{}};a=RA.d}
+  catch(e){if(tok==rtok&&$('pdm'))$('pdm').textContent='පූරණය අසාර්ථකයි: '+(e.message||e.code);return}
+  if(tok!=rtok)return;
+  const e=Object.entries(a).filter(([,x])=>x.q==q.id&&okImg(x.a));
+  rh=R.child('ratings/'+q.id);
+  rh.on('value',s=>{const el=$('pdm');if(tok!=rtok||!el)return;el.innerHTML=podiumHTML(rankArt(e,s.val()),SS,sid)});
 }
 /* ---- Quiz builder / share ---- */
 function addQ(){const q=readQ();if(!q)return;draft.push(q);$('qt').value='';bType();drawDraft()}
@@ -1645,13 +1739,15 @@ async function zEnd(){
 bType();drawDraft();
 function endClass(){
   if(!confirm('පන්තිය අවසන් කරන්නද? සියලු දත්ත මැකෙනු ඇත.'))return;
-  stopShare();R.remove();localStorage.removeItem('room');R.off();R=null;watched={};A={};S={};Q=null;
+  stopShare();R.remove();localStorage.removeItem('room');R.off();R=null;watched={};A={};S={};RT={};Q=null;
   $('rs').hidden=true;show('tDash');
 }
 
 /* ---------- සිසුවා ---------- */
 function renderQ(){
-  const q=q0;if(!q){$('qb').textContent='ප්‍රශ්නයක් එනතුරු රැඳී සිටින්න…';return}
+  const q=q0;if(rh){rh.off();rh=null}
+  if(!q){$('qb').textContent='ප්‍රශ්නයක් එනතුරු රැඳී සිටින්න…';return}
+  if(q.t=='draw'&&!q.open)return q.podium?stuPodium(q):stuRate(q);
   drawQ($('qb'),q,my&&my.q==q.id?my.a:null,q.open,a=>R.child('answers/'+sid).set({q:q.id,a}));
 }
 async function sJoin(){
@@ -1666,7 +1762,7 @@ async function sJoin(){
   db.ref('.info/connected').on('value',s=>{if(s.val()){pr.onDisconnect().set(false);pr.set(true)}});
   R.child('owner').on('value',s=>{if(!s.exists()){alert('පන්තිය අවසන් විය');location.href=location.pathname}});
   R.child('students/'+sid+'/score').on('value',s=>$('sc2').textContent=s.val()||0);
-  R.child('students').on('value',s=>{const v=Object.entries(s.val()||{}).sort((a,b)=>(b[1].score||0)-(a[1].score||0)),i=v.findIndex(x=>x[0]==sid);if(i>=0)$('me').textContent=($('sn').value.trim()||'')+' · 🏆 '+(i+1)+'/'+v.length});
+  R.child('students').on('value',s=>{SS=s.val()||{};const v=Object.entries(SS).sort((a,b)=>(b[1].score||0)-(a[1].score||0)),i=v.findIndex(x=>x[0]==sid);if(i>=0)$('me').textContent=($('sn').value.trim()||'')+' · 🏆 '+(i+1)+'/'+v.length});
   R.child('sharing').on('value',s=>{
     if(s.val()){$('vm').textContent='සම්බන්ධ වෙමින්…';R.child('sig/'+sid).remove().then(()=>R.child('sig/'+sid+'/ready').set(Date.now()))}
     else{if(spc)spc.close();$('vid').srcObject=null;$('vm').textContent='ගුරුවරයා තිරය Share කරන තෙක් රැඳී සිටින්න…'}});
