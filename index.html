@@ -46,7 +46,9 @@ footer .n{font-weight:800;font-size:.95rem;letter-spacing:1px}
 <input id="hc" placeholder="පන්ති කේතය" maxlength="6" autocomplete="off"><button onclick="goJoin()">Join</button></div>
 <div class="card"><h3>ගුරු පිවිසුම</h3>
 <input id="em" type="email" placeholder="Email" autocomplete="username"><input id="pw" type="password" placeholder="මුරපදය" autocomplete="current-password">
-<button onclick="login()">පිවිසෙන්න</button></div></div>
+<div id="le" style="display:none;background:#fee2e2;color:#991b1b;border-radius:8px;padding:8px 10px;margin:4px 0;font-size:.9rem"></div>
+<div class="row"><button id="lb" onclick="login()">පිවිසෙන්න (Login)</button><button id="sg" class="g2" onclick="signup()">ගිණුමක් සාදන්න (Sign Up)</button></div>
+<button class="o" style="text-align:center" onclick="resetPw()">මුරපදය අමතකද? (Reset)</button></div></div>
 
 <div class="v" id="tDash" hidden><div class="card"><h3>නව පන්තියක්</h3>
 <button onclick="openRoom()">Start Classroom</button>
@@ -1404,12 +1406,29 @@ else if(Z0){try{$('zn').value=localStorage.sn||''}catch(e){}show('zJoin')}
 else auth.onAuthStateChanged(u=>{
   if(u&&u.isAnonymous&&joining)return;
   const t=u&&!u.isAnonymous;show(t?'tDash':'tLogin');
-  if(t){$('rs').hidden=!localStorage.room;loadMy()}
+  if(t){try{$('rs').hidden=!localStorage.room}catch(e){}loadMy()}
 });
 ['em','pw'].forEach(i=>$(i).addEventListener('keydown',e=>e.key==='Enter'&&login()));
 
 /* ---------- ගුරුවරයා ---------- */
-function login(){auth.signInWithEmailAndPassword($('em').value.trim(),$('pw').value).catch(e=>alert('පිවිසීම අසාර්ථකයි: '+e.message))}
+const AERR={'auth/invalid-credential':'ඊමේල් හෝ මුරපදය වැරදියි, නැත්නම් මේ ගිණුම තවම නැත. "Sign Up" භාවිතා කරන්න.','auth/wrong-password':'මුරපදය වැරදියි.','auth/user-not-found':'මේ ඊමේල් එකට ගිණුමක් නැත. "Sign Up" භාවිතා කරන්න.','auth/invalid-email':'ඊමේල් ලිපිනය වැරදියි.','auth/missing-password':'මුරපදය ඇතුළත් කරන්න.','auth/weak-password':'මුරපදය අවම අකුරු 6ක් විය යුතුයි.','auth/email-already-in-use':'මේ ඊමේල් එකට දැනටමත් ගිණුමක් ඇත. "Login" භාවිතා කරන්න.','auth/too-many-requests':'උත්සාහ ගණන වැඩියි. විනාඩි කිහිපයකින් නැවත උත්සාහ කරන්න.','auth/network-request-failed':'ජාල සම්බන්ධතාව නැත (Internet / VPN / Ad-blocker පරීක්ෂා කරන්න).','auth/unauthorized-domain':'මේ domain එක Firebase හි Authorized domains වල නැත: '+location.hostname,'auth/operation-not-allowed':'Firebase හි Email/Password සක්‍රීය කර නැත.','auth/operation-not-supported-in-this-environment':'මෙම පිටුව https:// හරහා විවෘත කරන්න (file:// ක්‍රියා නොකරයි).'};
+function lerr(m){const e=$('le');e.textContent=m||'';e.style.display=m?'block':'none'}
+function ferr(e){lerr((AERR[e.code]||'දෝෂයකි')+' ['+(e.code||e.message)+']')}
+async function authGo(fn){
+  lerr('');const em=$('em').value.trim(),pw=$('pw').value;
+  if(!em||!pw)return lerr('ඊමේල් සහ මුරපදය ඇතුළත් කරන්න.');
+  const b=[$('lb'),$('sg')];b.forEach(x=>x.disabled=true);
+  try{await fn(em,pw)}catch(e){console.error(e);ferr(e)}finally{b.forEach(x=>x.disabled=false)}
+}
+function login(){authGo((e,p)=>auth.signInWithEmailAndPassword(e,p))}
+function signup(){authGo((e,p)=>auth.createUserWithEmailAndPassword(e,p))}
+async function resetPw(){
+  const em=$('em').value.trim();if(!em)return lerr('මුලින් ඊමේල් ඇතුළත් කරන්න.');
+  try{await auth.sendPasswordResetEmail(em);lerr('');alert('මුරපද reset සබැඳිය ඔබේ ඊමේල් එකට යැවුවා (Spam ෆෝල්ඩරයත් බලන්න).')}catch(e){ferr(e)}
+}
+if(location.protocol==='file:')document.addEventListener('DOMContentLoaded',()=>lerr('අවවාදයයි: ෆයිල් එක කෙලින්ම (file://) විවෘත කර ඇත. Login ක්‍රියා නොකරයි — https:// hosting එකක් හරහා විවෘත කරන්න.'));
+// auth state එක ලැබෙන්නේ නැත්නම් login පිටුව පෙන්වන්න
+setTimeout(()=>{if(['tLogin','tDash','tRoom','sJoin','sRoom','tBuild','tShare','zJoin','zRun'].every(x=>$(x).hidden))show('tLogin')},4000);
 async function openRoom(old){
   let c=old;
   if(!c){const L='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';c='';for(let i=0;i<6;i++)c+=L[Math.floor(Math.random()*L.length)]}
