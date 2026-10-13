@@ -1430,17 +1430,21 @@ if(location.protocol==='file:')document.addEventListener('DOMContentLoaded',()=>
 // auth state එක ලැබෙන්නේ නැත්නම් login පිටුව පෙන්වන්න
 setTimeout(()=>{if(['tLogin','tDash','tRoom','sJoin','sRoom','tBuild','tShare','zJoin','zRun'].every(x=>$(x).hidden))show('tLogin')},4000);
 async function openRoom(old){
-  let c=old;
-  if(!c){const L='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';c='';for(let i=0;i<6;i++)c+=L[Math.floor(Math.random()*L.length)]}
-  R=db.ref('rooms/'+c);
-  if(old){
-    const o=(await R.child('owner').once('value')).val();
-    if(o!==auth.currentUser.uid){localStorage.removeItem('room');$('rs').hidden=true;return alert('මෙම පන්තිය තවදුරටත් නොපවතී')}
-    await R.child('sharing').set(false);
-  }else await R.set({owner:auth.currentUser.uid,created:Date.now(),sharing:false});
-  localStorage.room=c;$('rc').textContent=c;
+  const tmo=(pr,ms)=>Promise.race([pr,new Promise((_,j)=>setTimeout(()=>j({code:'timeout'}),ms))]);
+  try{
+    if(!auth.currentUser||auth.currentUser.isAnonymous)return alert('මුලින් ගුරු ගිණුමෙන් Login වන්න');
+    let c=old;
+    if(!c){const L='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';c='';for(let i=0;i<6;i++)c+=L[Math.floor(Math.random()*L.length)]}
+    R=db.ref('rooms/'+c);
+    if(old){
+      const o=(await tmo(R.child('owner').once('value'),8000)).val();
+      if(o!==auth.currentUser.uid){try{localStorage.removeItem('room')}catch(e){}$('rs').hidden=true;R=null;return alert('මෙම පන්තිය තවදුරටත් නොපවතී')}
+      await tmo(R.child('sharing').set(false),8000);
+    }else await tmo(R.set({owner:auth.currentUser.uid,created:Date.now(),sharing:false}),8000);
+    localStorage.room=c;$('rc').textContent=c;
   const url=location.origin+location.pathname+'?c='+c;JU=url;$('ju').textContent=url;$('jbu').textContent=location.host+location.pathname.replace(/index\.html$/,'');$('jbc').textContent=c;$('rwa').href='https://wa.me/?text='+encodeURIComponent(shareMsg());
   $('qr').innerHTML='';makeQR($('qr'),url,200);show('tRoom');listenT();
+  }catch(e){console.error(e);R=null;alert('පන්තිය ආරම්භ කළ නොහැක: '+(e.code==='timeout'?'Firebase Database සමඟ සම්බන්ධ වීමට නොහැක (Offline). Internet සහ Database URL/Rules පරීක්ෂා කරන්න.':e.code==='PERMISSION_DENIED'||/permission/i.test(e.message||'')?'Database Rules මගින් ලිවීම ප්‍රතික්ෂේප විය (PERMISSION_DENIED). Realtime Database → Rules වල rooms ලිවීමට ඉඩ දෙන්න.':(e.message||e.code)))}
 }
 function goJoin(){
   const c=$('hc').value.trim().toUpperCase();if(!c)return $('hc').focus();
@@ -1530,9 +1534,16 @@ function sendQ(){
   R.child('answers').remove();R.child('q').set({...q,id:Date.now(),open:true});$('qt').value='';bType();show('tRoom');
 }
 async function closeQ(){
-  if(!Q||!Q.open)return;
-  await R.child('q/open').set(false);
-  Object.entries(A).forEach(([id,x])=>{if(x.q==Q.id&&grade(Q,x.a))R.child('students/'+id+'/score').transaction(v=>(v||0)+1)});
+  if(!R)return alert('පන්තියක් ආරම්භ කර නැත');
+  if(!Q)return alert('වසන්න ප්‍රශ්නයක් නැත. මුලින් "ප්‍රශ්නයක් සාදන්න / යවන්න" මගින් ප්‍රශ්නයක් Live යවන්න.');
+  if(!Q.open)return alert('මේ ප්‍රශ්නය දැනටමත් වසා ඇත. අලුත් ප්‍රශ්නයක් යවන්න.');
+  const q=Q,ans=Object.entries(A).filter(([,x])=>x.q==q.id);
+  try{
+    await Promise.race([R.child('q/open').set(false),new Promise((_,j)=>setTimeout(()=>j({code:'timeout'}),8000))]);
+    await Promise.all(ans.filter(([,x])=>grade(q,x.a)).map(([id])=>R.child('students/'+id+'/score').transaction(v=>(v||0)+1)));
+    const g=ans.filter(([,x])=>grade(q,x.a)).length;
+    if(!NEW.includes(q.t)&&q.t!='poll')alert('ප්‍රශ්නය වසා ඇත. නිවැරදි පිළිතුරු: '+g+' / '+ans.length);
+  }catch(e){console.error(e);alert('වසා ලකුණු දීම අසාර්ථකයි: '+(e.code==='timeout'?'Database සමඟ සම්බන්ධ වීමට නොහැක (Offline).':(e.message||e.code)))}
 }
 function drawRes(){
   if(!Q){$('res').innerHTML='';return}
