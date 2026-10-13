@@ -58,9 +58,7 @@ video{width:100%;background:#000;border-radius:8px;max-height:60vh}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 // === Firebase Console > Project settings වෙතින් ඔබේ config මෙහි දමන්න ===
-const CFG={apiKey:"YOUR_API_KEY",authDomain:"YOUR_PROJECT.firebaseapp.com",databaseURL:"https://YOUR_PROJECT-default-rtdb.firebaseio.com",projectId:"YOUR_PROJECT",appId:"YOUR_APP_ID"};
-firebase.initializeApp(CFG);const auth=firebase.auth(),db=firebase.database();
-const $=id=>document.getElementById(id),show=id=>document.querySelectorAll('.v').forEach(e=>e.hidden=e.id!=id);
+npm install firebase
 const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
 const C0=new URLSearchParams(location.search).get('c');
 let R,Q,stream,sid,pcs={},watched={};
