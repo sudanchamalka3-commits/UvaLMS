@@ -61,6 +61,23 @@ footer .n{font-weight:800;font-size:.95rem;letter-spacing:1px}
 .rk img{width:56px;height:56px;object-fit:contain;background:#fff;border:1px solid var(--b);border-radius:6px;cursor:zoom-in}.rk b{margin-left:auto;white-space:nowrap}
 #lbx{position:fixed;inset:0;z-index:120;background:#000c;display:flex;align-items:center;justify-content:center;padding:16px;cursor:zoom-out}
 #lbx[hidden]{display:none}#lbx img{max-width:100%;max-height:100%;background:#fff;border-radius:10px}
+
+/* ---- Presentations ---- */
+textarea{font:inherit;padding:10px;border-radius:8px;border:1px solid var(--b);width:100%;margin:4px 0;resize:vertical}
+textarea:focus{outline:2px solid var(--p);border-color:transparent}
+.sx{container-type:inline-size;aspect-ratio:16/9;width:100%;border-radius:10px;overflow:hidden;position:relative;box-shadow:0 1px 6px #0003}
+.sx>div{position:absolute;inset:0;display:flex;padding:5cqw 6cqw;gap:4cqw}
+.sx .tx{flex:1;min-width:0;overflow:hidden}
+.sx h2{font-size:5.2cqw;margin:0 0 3cqw;line-height:1.2;border-left:.8cqw solid var(--ac);padding-left:2cqw}
+.sx ul{margin:0;padding-left:4cqw;font-size:3.6cqw;line-height:1.35}.sx li{margin:0 0 1.4cqw}
+.sx img{max-width:42%;max-height:100%;object-fit:contain;align-self:center;border-radius:1cqw;background:#fff}
+.sx.c>div{flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1.5cqw}
+.sx.c h1{font-size:8cqw;margin:0;line-height:1.15}.sx.c p{font-size:3.8cqw;margin:0;opacity:.85}
+.sx.c img{max-height:34%;max-width:60%;margin-top:2cqw}
+#ps:fullscreen,#sds:fullscreen{display:flex;align-items:center;background:#000}
+#pm{position:fixed;inset:0;z-index:110;background:#020617;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:12px}
+#pm[hidden]{display:none}#pms{width:min(100%,calc((100vh - 90px)*16/9))}
+#pmb{display:flex;gap:10px;align-items:center;color:#fff;flex-wrap:wrap;justify-content:center}#pmb button{width:auto;margin:0;padding:8px 22px}
 </style></head><body>
 <header><span>ICTPLUZ Smart Classroom</span><span id="net">Offline</span></header>
 <div id="jb" hidden><span>Join at <b id="jbu"></b></span><span>Code:</span><span class="code" id="jbc" style="font-size:1.5rem;letter-spacing:4px"></span><button onclick="bigView()">QR ▦</button></div>
@@ -76,8 +93,9 @@ footer .n{font-weight:800;font-size:.95rem;letter-spacing:1px}
 <div class="v" id="tDash" hidden><div class="card"><h3>නව පන්තියක්</h3>
 <button onclick="openRoom()">Start Classroom</button>
 <button id="rs" class="g2" onclick="openRoom(localStorage.room)" hidden>පෙර පන්තිය නැවත විවෘත කරන්න</button>
-<button class="g2" onclick="show('tBuild')">Quiz සාදන්න</button></div>
-<div class="card"><h3>මගේ Quiz</h3><div id="mq"></div></div><div class="card" id="zr" hidden></div>
+<button class="g2" onclick="show('tBuild')">Quiz සාදන්න</button>
+<button class="g2" onclick="newDeck()">Presentation සාදන්න</button></div>
+<div class="card"><h3>මගේ Quiz</h3><div id="mq"></div></div><div class="card"><h3>මගේ Presentations</h3><div id="mp"></div></div><div class="card" id="zr" hidden></div>
 <button class="o" onclick="auth.signOut()">ඉවත් වන්න</button></div>
 
 <div class="v" id="tRoom" hidden>
@@ -95,6 +113,7 @@ footer .n{font-weight:800;font-size:.95rem;letter-spacing:1px}
 <div class="card"><h3>Live ප්‍රශ්නය</h3>
 <button onclick="show('tBuild')">ප්‍රශ්නයක් සාදන්න / යවන්න</button>
 <button class="r" onclick="closeQ()">වසා ලකුණු දෙන්න</button><div id="res"></div></div></div>
+<div class="card"><h3>Presentation පෙන්වන්න</h3><div id="rpl"></div><small>තෝරාගත් slide සිසුන්ගේ තිරයටත් Live පෙන්වයි</small></div>
 <button class="r" onclick="endClass()">පන්තිය අවසන් කරන්න</button></div>
 
 <div class="v" id="sJoin" hidden><div class="card"><h3>පන්තියට සම්බන්ධ වන්න</h3>
@@ -104,6 +123,8 @@ footer .n{font-weight:800;font-size:.95rem;letter-spacing:1px}
 
 <div class="v" id="sRoom" hidden>
 <div class="card"><b id="me"></b> — ලකුණු: <b id="sc2">0</b></div>
+<div class="card" id="sd" hidden><div id="sds"></div><small id="sdc"></small>
+<button class="g2" onclick="$('sds').requestFullscreen&&$('sds').requestFullscreen()">සම්පූර්ණ තිරය</button></div>
 <div class="card"><video id="vid" autoplay muted playsinline></video><div id="vm">ගුරුවරයා තිරය Share කරන තෙක් රැඳී සිටින්න…</div>
 <button class="g2" onclick="$('vid').requestFullscreen&&$('vid').requestFullscreen()">සම්පූර්ණ තිරය</button></div>
 <div class="card" id="qb">ප්‍රශ්නයක් එනතුරු රැඳී සිටින්න…</div></div>
@@ -114,12 +135,35 @@ footer .n{font-weight:800;font-size:.95rem;letter-spacing:1px}
 <div class="row"><button onclick="sendQ()">Live යවන්න</button><button class="g2" onclick="addQ()">+ Quiz එකට එක් කරන්න</button></div></div>
 <div class="card"><h3>Quiz ලැයිස්තුව</h3><div id="dl"></div><input id="zt" placeholder="Quiz නම"><button onclick="saveQuiz()">සුරකින්න &amp; Share කරන්න</button></div>
 <button class="o" onclick="show(R?'tRoom':'tDash')">← ආපසු</button></div>
-<div class="v" id="tShare" hidden><div class="card" style="text-align:center"><h3>Quiz Share කරන්න</h3>
+<div class="v" id="tShare" hidden><div class="card" style="text-align:center"><h3 id="shh">Quiz Share කරන්න</h3>
 <div id="zq" style="display:flex;justify-content:center;padding:8px"></div><small id="zl"></small>
 <button class="g2" onclick="cp('zl')">සබැඳිය පිටපත් කරන්න</button><a id="wa" class="btn" target="_blank" rel="noopener">WhatsApp</a>
 <button class="o" onclick="show('tDash')">← ආපසු</button></div></div>
 <div class="v" id="zJoin" hidden><div class="card"><h3>Quiz එකට සහභාගී වන්න</h3><input id="zn" placeholder="ඔබේ නම" maxlength="30"><button onclick="zStart()">ආරම්භ කරන්න</button></div></div>
 <div class="v" id="zRun" hidden><div class="card"><b id="zh"></b> <span id="zp" style="float:right"></span></div><div class="card" id="zb"></div></div>
+
+<div class="v" id="tSlides" hidden><div class="card"><h3>Presentation එකක් සාදන්න</h3>
+<input id="pt" placeholder="Presentation නම" maxlength="80"></div>
+<div class="card"><div id="pch" class="row" style="flex-wrap:wrap"></div></div>
+<div class="g"><div class="card">
+<select id="psl" onchange="upd()"><option value="b">මාතෘකාව + ලක්ෂ්‍ය (Bullets)</option><option value="c">මැද මාතෘකාව (Title / Section)</option></select>
+<input id="pst" placeholder="Slide මාතෘකාව" oninput="upd()" maxlength="120">
+<textarea id="psb" rows="6" placeholder="ලක්ෂ්‍ය ලියන්න" oninput="upd()" maxlength="1500"></textarea>
+<small>එක් පේළියක් = එක් ලක්ෂ්‍යයක් (මැද මාතෘකා layout එකේදී උප මාතෘකාව)</small>
+<div id="pcs" class="row" style="flex-wrap:wrap;margin:8px 0"></div>
+<div class="row"><button class="g2" onclick="$('pfi').click()">🖼 පින්තූරයක් එක් කරන්න</button><button class="g2" id="pxi" onclick="deckD.slides[bsi].img='';bDeck()">පින්තූරය ඉවත් කරන්න</button></div>
+<input id="pfi" type="file" accept="image/*" hidden onchange="pImg(this)"></div>
+<div class="card"><div id="ppv"></div>
+<div class="row"><button class="g2" onclick="mvSl(-1)" aria-label="ඉහළට">↑</button><button class="g2" onclick="mvSl(1)" aria-label="පහළට">↓</button><button class="g2" onclick="dupSl()">පිටපතක්</button><button class="r" onclick="delSl()">මකන්න</button></div></div></div>
+<div class="card"><div class="row"><button onclick="savePres()">සුරකින්න</button><button class="g2" onclick="savePres(1)">සුරකින්න &amp; Present</button></div></div>
+<button class="o" onclick="show('tDash')">← ආපසු</button></div>
+
+<div class="v" id="pRun" hidden><div class="card"><b id="ph"></b> <span id="pp" style="float:right"></span></div>
+<div class="card"><div id="ps"></div>
+<div class="row"><button class="g2" onclick="pNav(-1)">← කලින්</button><button onclick="pNav(1)">ඊළඟ →</button></div>
+<button class="o" style="text-align:center" onclick="$('ps').requestFullscreen&&$('ps').requestFullscreen()">සම්පූර්ණ තිරය</button></div></div>
+
+<div id="pm" hidden><div id="pms"></div><div id="pmb"><button class="g2" onclick="pmGo(-1)" aria-label="කලින් slide">◀</button><span id="pmc"></span><button class="g2" onclick="pmGo(1)" aria-label="ඊළඟ slide">▶</button><button class="r" onclick="pmExit()">වසන්න ✕</button></div></div>
 
 <div id="big" hidden><div style="font-weight:700">ICTPLUZ Live පන්තියට සම්බන්ධ වන්න</div><div id="bq"></div>
 <div>QR scan කරන්න, නැතහොත් කේතය ඇතුළත් කරන්න</div><div class="code" id="bc"></div><small id="bu"></small>
@@ -1418,17 +1462,20 @@ firebase.initializeApp({
 const auth=firebase.auth(),db=firebase.database();
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const show=id=>{['tLogin','tDash','tRoom','sJoin','sRoom','tBuild','tShare','zJoin','zRun'].forEach(x=>$(x).hidden=x!=id);$('jb').hidden=!(R&&(id=='tRoom'||id=='tBuild'))};
+const show=id=>{['tLogin','tDash','tRoom','sJoin','sRoom','tBuild','tShare','zJoin','zRun','tSlides','pRun'].forEach(x=>$(x).hidden=x!=id);$('jb').hidden=!(R&&(id=='tRoom'||id=='tBuild'))};
 const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
 const C0=(new URLSearchParams(location.search).get('c')||'').toUpperCase();
 let R,Q,A={},S={},stream,sid,pcs={},watched={},q0,my,spc,JU='',joining=false;
 let RT={},SS={},RA=null,rh=null,rtok=0;
+let deckD={slides:[]},bsi=0,editId=null,PC={},PD=null,pi=0,PV=null,pvi=0,SD=null,SI=null;
 
 db.ref('.info/connected').on('value',s=>{$('net').textContent=s.val()?'Online':'Offline';$('net').className=s.val()?'on':''});
 
 const Z0=(new URLSearchParams(location.search).get('z')||'').toUpperCase();
+const P0=(new URLSearchParams(location.search).get('p')||'').toUpperCase();
 if(C0){$('sb').hidden=true;$('sc').value=C0;try{$('sn').value=localStorage.sn||''}catch(e){}show('sJoin')}
 else if(Z0){try{$('zn').value=localStorage.sn||''}catch(e){}show('zJoin')}
+else if(P0)pStart();
 else auth.onAuthStateChanged(u=>{
   if(u&&u.isAnonymous&&joining)return;
   const t=u&&!u.isAnonymous;show(t?'tDash':'tLogin');
@@ -1454,7 +1501,7 @@ async function resetPw(){
 }
 if(location.protocol==='file:')document.addEventListener('DOMContentLoaded',()=>lerr('අවවාදයයි: ෆයිල් එක කෙලින්ම (file://) විවෘත කර ඇත. Login ක්‍රියා නොකරයි — https:// hosting එකක් හරහා විවෘත කරන්න.'));
 // auth state එක ලැබෙන්නේ නැත්නම් login පිටුව පෙන්වන්න
-setTimeout(()=>{if(['tLogin','tDash','tRoom','sJoin','sRoom','tBuild','tShare','zJoin','zRun'].every(x=>$(x).hidden))show('tLogin')},4000);
+setTimeout(()=>{if(['tLogin','tDash','tRoom','sJoin','sRoom','tBuild','tShare','zJoin','zRun','tSlides','pRun'].every(x=>$(x).hidden))show('tLogin')},4000);
 async function openRoom(old){
   const tmo=(pr,ms)=>Promise.race([pr,new Promise((_,j)=>setTimeout(()=>j({code:'timeout'}),ms))]);
   try{
@@ -1665,11 +1712,11 @@ async function saveQuiz(){
   draft=[];$('zt').value='';drawDraft();loadMy();shareQuiz(id);
 }
 function shareQuiz(id){
-  const u=location.origin+location.pathname+'?z='+id;$('zl').textContent=u;$('zq').innerHTML='';
+  const u=location.origin+location.pathname+'?z='+id;$('shh').textContent='Quiz Share කරන්න';$('zl').textContent=u;$('zq').innerHTML='';
   makeQR($('zq'),u,200);$('wa').href='https://wa.me/?text='+encodeURIComponent(u);show('tShare');
 }
 function cp(id){navigator.clipboard.writeText($(id).textContent).then(()=>alert('පිටපත් කරන ලදී ✅'))}
-function loadMy(){
+function loadMy(){loadPres();
   db.ref('users/'+auth.currentUser.uid+'/quizzes').once('value').then(s=>{const v=s.val()||{};
     $('mq').innerHTML=Object.entries(v).map(([id,t])=>`<div class="st">${esc(t)} <small>${id}</small><span style="margin-left:auto;display:flex;gap:6px"><button style="width:auto;margin:0" onclick="shareQuiz('${id}')">Share</button><button class="g2" style="width:auto;margin:0" onclick="results('${id}')">ප්‍රතිඵල</button></span></div>`).join('')||'<small>තවම Quiz නැත</small>'});
 }
@@ -1743,6 +1790,117 @@ function endClass(){
   $('rs').hidden=true;show('tDash');
 }
 
+/* ---------- Presentations ---------- */
+const TH=[{bg:'#ffffff',fg:'#0f172a',ac:'#2563eb'},{bg:'#1e3a8a',fg:'#ffffff',ac:'#93c5fd'},{bg:'#065f46',fg:'#ffffff',ac:'#6ee7b7'},{bg:'#0f172a',fg:'#f8fafc',ac:'#fbbf24'},{bg:'#fef3c7',fg:'#78350f',ac:'#d97706'}];
+function slideHTML(s){
+  s=s||{};const th=TH[s.c]||TH[0],img=okImg(s.img)?s.img:'',L=String(s.b||'').split('\n').map(x=>x.trim()).filter(Boolean),im=img?`<img src="${esc(img)}" alt="">`:'';
+  const inner=s.l=='c'
+    ?`<div><h1>${esc(s.t||'')}</h1>${L.map(x=>`<p>${esc(x)}</p>`).join('')}${im}</div>`
+    :`<div><div class="tx">${s.t?`<h2>${esc(s.t)}</h2>`:''}<ul>${L.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>${im}</div>`;
+  return `<div class="sx${s.l=='c'?' c':''}" style="background:${th.bg};color:${th.fg};--ac:${th.ac}">${inner}</div>`;
+}
+/* builder */
+const newSlide=(c)=>({l:'b',t:'',b:'',c:c||0,img:''});
+function newDeck(){editId=null;deckD={slides:[newSlide()]};bsi=0;$('pt').value='';bDeck();show('tSlides')}
+async function editPres(id){
+  try{
+    const p=(await db.ref('presentations/'+id).once('value')).val();
+    if(!p||!Array.isArray(p.slides))return alert('Presentation එක හමු නොවීය');
+    editId=id;deckD={slides:p.slides.map(s=>({l:s.l=='c'?'c':'b',t:s.t||'',b:s.b||'',c:TH[s.c]?s.c:0,img:okImg(s.img)?s.img:''}))};
+    bsi=0;$('pt').value=p.title||'';bDeck();show('tSlides');
+  }catch(e){alert('පූරණය අසාර්ථකයි: '+(e.message||e.code))}
+}
+function bDeck(){
+  const s=deckD.slides[bsi];
+  $('pch').innerHTML=deckD.slides.map((x,i)=>`<button class="${i==bsi?'':'o'}" style="width:auto;margin:0;padding:6px 14px;text-align:center" onclick="bsi=${i};bDeck()">${i+1}</button>`).join('')+'<button class="g2" style="width:auto;margin:0;padding:6px 14px" onclick="addSl()">+ Slide</button>';
+  $('psl').value=s.l;$('pst').value=s.t;$('psb').value=s.b;
+  $('pcs').innerHTML=TH.map((h,i)=>`<button aria-label="වර්ණය ${i+1}" onclick="setC(${i})" style="width:34px;height:34px;padding:0;margin:0;flex:none;border-radius:50%;background:${h.bg};border:3px solid ${i==(s.c||0)?'var(--p)':'#94a3b8'}"></button>`).join('');
+  $('pxi').hidden=!s.img;$('ppv').innerHTML=slideHTML(s);
+}
+function upd(){const s=deckD.slides[bsi];s.l=$('psl').value;s.t=$('pst').value;s.b=$('psb').value;$('ppv').innerHTML=slideHTML(s)}
+function setC(i){deckD.slides[bsi].c=i;bDeck()}
+function addSl(){deckD.slides.splice(bsi+1,0,newSlide(deckD.slides[bsi].c));bsi++;bDeck()}
+function dupSl(){deckD.slides.splice(bsi+1,0,{...deckD.slides[bsi]});bsi++;bDeck()}
+function delSl(){if(deckD.slides.length<2)return alert('අවම slide 1ක් තිබිය යුතුයි');if(!confirm('මේ slide එක මකන්නද?'))return;deckD.slides.splice(bsi,1);bsi=Math.min(bsi,deckD.slides.length-1);bDeck()}
+function mvSl(d){const n=bsi+d;if(n<0||n>=deckD.slides.length)return;const a=deckD.slides;[a[bsi],a[n]]=[a[n],a[bsi]];bsi=n;bDeck()}
+function pImg(inp){
+  const f=inp.files[0],idx=bsi;inp.value='';if(!f)return;
+  if(!/^image\//.test(f.type))return alert('පින්තූරයක් තෝරන්න');
+  const r=new FileReader();
+  r.onload=()=>{const im=new Image();
+    im.onload=()=>{const k=Math.min(1,900/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);
+      const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);
+      if(deckD.slides[idx]){deckD.slides[idx].img=c.toDataURL('image/jpeg',.7);if(idx==bsi)bDeck()}};
+    im.onerror=()=>alert('පින්තූරය කියවිය නොහැක');im.src=r.result};
+  r.readAsDataURL(f);
+}
+async function savePres(go){
+  const ti=$('pt').value.trim(),sl=deckD.slides.filter(s=>s.t.trim()||s.b.trim()||s.img);
+  if(!ti||!sl.length)return alert('Presentation නම සහ අවම slide 1ක් (අන්තර්ගතයක් සහිත) අවශ්‍යයි');
+  const id=editId||rid(),u=auth.currentUser.uid;
+  try{await db.ref('presentations/'+id).set({owner:u,title:ti,slides:sl,created:Date.now()});await db.ref('users/'+u+'/presentations/'+id).set(ti)}
+  catch(e){return alert('සුරැකීම අසාර්ථකයි: '+(e.code==='PERMISSION_DENIED'?'Database Rules වල "presentations" සහ "users/…/presentations" ලිවීමට ඉඩ දෙන්න.':e.message))}
+  editId=null;deckD={slides:[]};await loadPres();show('tDash');
+  if(go)present(id);else alert('සුරකින ලදී ✅');
+}
+function loadPres(){
+  return db.ref('users/'+auth.currentUser.uid+'/presentations').once('value').then(s=>{PC=s.val()||{};
+    $('mp').innerHTML=Object.entries(PC).map(([id,t])=>`<div class="st" style="flex-wrap:wrap">${esc(t)} <small>${id}</small><span style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap"><button style="width:auto;margin:0" onclick="present('${id}')">Present</button><button class="g2" style="width:auto;margin:0" onclick="editPres('${id}')">සංස්කරණය</button><button class="g2" style="width:auto;margin:0" onclick="sharePres('${id}')">Share</button><button class="r" style="width:auto;margin:0" onclick="delPres('${id}')" aria-label="මකන්න">✕</button></span></div>`).join('')||'<small>තවම Presentation නැත</small>';
+    drawRoomPres()}).catch(()=>{$('mp').innerHTML='<small>පූරණය අසාර්ථකයි (Database Rules පරීක්ෂා කරන්න)</small>'});
+}
+function drawRoomPres(){
+  $('rpl').innerHTML=Object.entries(PC).map(([id,t])=>`<div class="st">${esc(t)}<button style="width:auto;margin:0 0 0 auto" onclick="present('${id}')">Present</button></div>`).join('')||'<small>Presentation නැත — Dashboard එකෙන් සාදන්න</small>';
+}
+async function delPres(id){
+  if(!confirm('මේ Presentation එක මකන්නද?'))return;
+  try{await db.ref('presentations/'+id).remove();await db.ref('users/'+auth.currentUser.uid+'/presentations/'+id).remove()}catch(e){return alert('මැකීම අසාර්ථකයි: '+(e.message||e.code))}
+  loadPres();
+}
+function sharePres(id){
+  const u=location.origin+location.pathname+'?p='+id;$('shh').textContent='Presentation Share කරන්න';$('zl').textContent=u;$('zq').innerHTML='';
+  makeQR($('zq'),u,200);$('wa').href='https://wa.me/?text='+encodeURIComponent(u);show('tShare');
+}
+/* teacher: present (+ live broadcast when a class is open) */
+async function present(id){
+  let p;
+  try{p=(await db.ref('presentations/'+id).once('value')).val()}catch(e){return alert('පූරණය අසාර්ථකයි: '+(e.message||e.code))}
+  if(!p||!Array.isArray(p.slides)||!p.slides.length)return alert('Presentation එක හමු නොවීය');
+  PD=p.slides;pi=0;
+  if(R)R.child('deck').set({title:p.title||'',slides:PD}).then(()=>R.child('slide').set(0)).catch(e=>alert('සිසුන්ට Live යැවීම අසාර්ථකයි: '+(e.message||e.code)));
+  $('pm').hidden=false;pmDraw();
+  try{$('pm').requestFullscreen&&$('pm').requestFullscreen().catch(()=>{})}catch(e){}
+}
+function pmDraw(){$('pms').innerHTML=slideHTML(PD[pi]);$('pmc').textContent=(pi+1)+' / '+PD.length+(R?' · සිසුන්ට Live':'')}
+function pmGo(d){if(!PD)return;const n=pi+d;if(n<0||n>=PD.length)return;pi=n;pmDraw();if(R)R.child('slide').set(pi)}
+function pmExit(){
+  $('pm').hidden=true;if(document.fullscreenElement)document.exitFullscreen();
+  if(R&&PD){R.child('deck').remove();R.child('slide').remove()}PD=null;
+}
+/* student: follow teacher's slide */
+function sdDraw(){
+  const e=$('sd');
+  if(!SD||!Array.isArray(SD.slides)||!Number.isInteger(SI)||!SD.slides[SI]){e.hidden=true;return}
+  e.hidden=false;$('sds').innerHTML=slideHTML(SD.slides[SI]);$('sdc').textContent=(SD.title?SD.title+' · ':'')+(SI+1)+' / '+SD.slides.length;
+}
+/* self-paced viewer (?p=ID) */
+async function pStart(){
+  show('pRun');$('ph').textContent='පූරණය වෙමින්…';
+  try{
+    const u=await new Promise(r=>{const o=auth.onAuthStateChanged(x=>{o();r(x)})});
+    if(!u)await auth.signInAnonymously();
+    PV=(await db.ref('presentations/'+P0).once('value')).val();
+  }catch(e){$('ph').textContent='සම්බන්ධ විය නොහැක: '+(e.message||e.code);return}
+  if(!PV||!Array.isArray(PV.slides)){$('ph').textContent='Presentation එක හමු නොවීය';return}
+  $('ph').textContent=PV.title||'';pvi=0;pDraw();
+}
+function pDraw(){$('ps').innerHTML=slideHTML(PV.slides[pvi]);$('pp').textContent=(pvi+1)+' / '+PV.slides.length}
+function pNav(d){if(!PV)return;const n=pvi+d;if(n<0||n>=PV.slides.length)return;pvi=n;pDraw()}
+document.addEventListener('keydown',e=>{
+  const k=e.key,nx=k=='ArrowRight'||k=='PageDown'||k==' ',pv=k=='ArrowLeft'||k=='PageUp';
+  if(!$('pm').hidden){if(nx||pv){e.preventDefault();pmGo(nx?1:-1)}else if(k=='Escape')pmExit()}
+  else if(!$('pRun').hidden&&(nx||pv)){e.preventDefault();pNav(nx?1:-1)}
+});
+
 /* ---------- සිසුවා ---------- */
 function renderQ(){
   const q=q0;if(rh){rh.off();rh=null}
@@ -1778,5 +1936,7 @@ async function sJoin(){
   });
   R.child('answers/'+sid).on('value',s=>{my=s.val();renderQ()});
   R.child('q').on('value',s=>{q0=s.val();renderQ()});
+  R.child('deck').on('value',s=>{SD=s.val();sdDraw()});
+  R.child('slide').on('value',s=>{SI=s.val();sdDraw()});
 }
 </script></body></html>
