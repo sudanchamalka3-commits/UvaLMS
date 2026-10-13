@@ -7,21 +7,19 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Noto+Sans+Sinhala:wght@400;600;700;800&display=swap" rel="stylesheet">
-<!-- Reliable QR Code & Confetti Libraries via CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <style>
 :root {
   --primary: #4f46e5; --primary-hover: #4338ca; --primary-light: rgba(79, 70, 229, 0.15);
   --accent: #06b6d4; --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
-  --card-bg: rgba(30, 41, 59, 0.75); --card-border: rgba(255, 255, 255, 0.1);
-  --text-main: #f8fafc; --text-muted: #94a3b8; --input-bg: rgba(15, 23, 42, 0.6);
+  --card-bg: rgba(30, 41, 59, 0.85); --card-border: rgba(255, 255, 255, 0.1);
+  --text-main: #f8fafc; --text-muted: #94a3b8; --input-bg: rgba(15, 23, 42, 0.7);
   --border-color: rgba(255, 255, 255, 0.15); --ok: #10b981; --bad: #ef4444;
   --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
 }
 [data-theme="light"] {
   --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 50%, #f1f5f9 100%);
-  --card-bg: rgba(255, 255, 255, 0.9); --card-border: rgba(0, 0, 0, 0.08);
+  --card-bg: rgba(255, 255, 255, 0.95); --card-border: rgba(0, 0, 0, 0.08);
   --text-main: #0f172a; --text-muted: #64748b; --input-bg: rgba(255, 255, 255, 0.9);
   --border-color: rgba(0, 0, 0, 0.12); --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
 }
@@ -37,13 +35,13 @@ header { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border
 .card { background: var(--card-bg); backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: var(--shadow); }
 h3 { margin: 0 0 16px; font-weight: 700; font-size: 1.2rem; }
 input, select, button { font-family: inherit; font-size: 0.95rem; padding: 12px 16px; border-radius: 10px; border: 1px solid var(--border-color); width: 100%; margin: 6px 0; background: var(--input-bg); color: var(--text-main); }
-input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light, rgba(79,70,229,0.15)); }
-button { background: var(--primary, #4f46e5); color: #fff; border: none; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.1s; }
+input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+button { background: var(--primary); color: #fff; border: none; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 button:hover { filter: brightness(1.1); }
 button.r { background: var(--bad); }
 button.g2 { background: rgba(148, 163, 184, 0.2); color: var(--text-main); }
 button.o { background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); text-align: left; }
-button.o.sel { border: 2px solid var(--primary, #4f46e5); background: rgba(79,70,229,0.15); }
+button.o.sel { border: 2px solid var(--primary); background: rgba(79,70,229,0.15); }
 .g { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
 @media(max-width:768px){ .g { grid-template-columns: 1fr; } }
 .row { display: flex; gap: 10px; }
@@ -93,7 +91,7 @@ footer a { color: var(--accent); text-decoration: none; }
 </div>
 
 <!-- Login View -->
-<div class="v" id="tLogin" hidden>
+<div class="v" id="tLogin">
   <div class="card jh">
     <h3>සිසුන් සඳහා – පන්තියට සම්බන්ධ වන්න</h3>
     <input id="hc" placeholder="පන්ති කේතය" maxlength="6" autocomplete="off">
@@ -296,29 +294,23 @@ function playSound(type) {
   }
 }
 
-/* Robust QR Code Function using qrcode-generator CDN */
+/* Highly Reliable QR Code Generator using Google Charts API */
 function makeQR(el, text, size) {
   try {
     el.innerHTML = '';
-    var typeNumber = 0; // Auto detect
-    var errorCorrectionLevel = 'M';
-    var qr = qrcode(typeNumber, errorCorrectionLevel);
-    qr.addData(String(text));
-    qr.make();
-    // Create table-based or img-based output safely
-    var qrImageTag = qr.createImgTag(4, 8);
-    el.innerHTML = qrImageTag;
-    // Style the generated image to fit responsive container
-    const img = el.querySelector('img');
-    if(img) {
-      img.style.width = '100%';
-      img.style.maxWidth = size + 'px';
-      img.style.height = 'auto';
-      img.style.borderRadius = '8px';
-    }
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}`;
+    const img = document.createElement('img');
+    img.src = qrUrl;
+    img.alt = "QR Code";
+    img.style.maxWidth = "100%";
+    img.style.height = "auto";
+    img.style.borderRadius = "8px";
+    img.style.background = "#fff";
+    img.style.padding = "8px";
+    el.appendChild(img);
     return true;
   } catch (e) {
-    el.textContent = 'QR සෑදිය නොහැක – කේතය භාවිත කරන්න';
+    el.textContent = 'QR සෑදිය නොහැක';
     return false;
   }
 }
@@ -336,7 +328,15 @@ firebase.initializeApp({
 const auth=firebase.auth(), db=firebase.database();
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const show=id=>{['tLogin','tDash','tRoom','sJoin','sRoom','tBuild','tShare','zJoin','zRun'].forEach(x=>$(x).hidden=x!=id);$('jb').hidden=!(R&&(id=='tRoom'||id=='tBuild'))};
+
+const show=id=>{
+  ['tLogin','tDash','tRoom','sJoin','sRoom','tBuild','tShare','zJoin','zRun'].forEach(x=>{
+    const el = $(x);
+    if(el) el.hidden = (x !== id);
+  });
+  $('jb').hidden = !(R && (id === 'tRoom' || id === 'tBuild'));
+};
+
 const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
 const C0=(new URLSearchParams(location.search).get('c')||'').toUpperCase();
 let R,Q,A={},S={},stream,sid,pcs={},watched={},q0,my,spc,JU='',joining=false;
@@ -344,15 +344,29 @@ let R,Q,A={},S={},stream,sid,pcs={},watched={},q0,my,spc,JU='',joining=false;
 db.ref('.info/connected').on('value',s=>{$('net').textContent=s.val()?'Online':'Offline';$('net').className=s.val()?'on':''});
 
 const Z0=(new URLSearchParams(location.search).get('z')||'').toUpperCase();
-if(C0){$('sb').hidden=true;$('sc').value=C0;try{$('sn').value=localStorage.sn||''}catch(e){}show('sJoin')}
-else if(Z0){try{$('zn').value=localStorage.sn||''}catch(e){}show('zJoin')}
-else auth.onAuthStateChanged(u=>{
-  if(u&&u.isAnonymous&&joining)return;
-  const t=u&&!u.isAnonymous;show(t?'tDash':'tLogin');
-  if(t){$('rs').hidden=!localStorage.room;loadMy()}
-});
+if(C0){
+  $('sb').hidden=true;$('sc').value=C0;
+  try{$('sn').value=localStorage.sn||''}catch(e){}
+  show('sJoin');
+}
+else if(Z0){
+  try{$('zn').value=localStorage.sn||''}catch(e){}
+  show('zJoin');
+}
+else {
+  auth.onAuthStateChanged(u=>{
+    if(u&&u.isAnonymous&&joining)return;
+    const t=u&&!u.isAnonymous;
+    show(t?'tDash':'tLogin');
+    if(t){
+      $('rs').hidden=!localStorage.room;
+      loadMy();
+    }
+  });
+}
 
 function login(){auth.signInWithEmailAndPassword($('em').value.trim(),$('pw').value).catch(e=>alert('පිවිසීම අසාර්ථකයි: '+e.message))}
+
 async function openRoom(old){
   let c=old;
   if(!c){const L='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';c='';for(let i=0;i<6;i++)c+=L[Math.floor(Math.random()*L.length)]}
@@ -398,12 +412,12 @@ function drawList(){
 
 async function share(){
   try{
-    stream=await navigator.mediaDevices.getDisplayMedia({video:true, audio:true});
+    stream=await navigator.mediaDevices.getDisplayMedia({video:true});
     $('pv').srcObject=stream;
     stream.getVideoTracks()[0].onended=stopShare;
     R.child('sharing').set(true);
   }catch(e){
-    alert('තිරය Share කිරීම අසාර්ථකයි හෝ අවසරය ලබා දී නැත.');
+    alert('තිරය Share කිරීමට අවසර නැත හෝ Browser එක මඟින් Block කර ඇත.');
   }
 }
 
@@ -613,7 +627,7 @@ async function sJoin(){
     await pc.setRemoteDescription(JSON.parse(s.val()));
     tc.on('child_added',c=>pc.addIceCandidate(JSON.parse(c.val())).catch(()=>{}));
     await pc.setLocalDescription(await pc.createAnswer());
-    R.child('sig/'+sig+'/answer').set(JSON.stringify(pc.localDescription)); // Fixed bug variable name
+    R.child('sig/'+sid+'/answer').set(JSON.stringify(pc.localDescription));
   });
   R.child('answers/'+sid).on('value',s=>{my=s.val();renderQ()});
   R.child('q').on('value',s=>{q0=s.val();renderQ()});
