@@ -1533,6 +1533,7 @@ async function resetPw(){
   try{await auth.sendPasswordResetEmail(em);lerr('');alert('මුරපද reset සබැඳිය ඔබේ ඊමේල් එකට යැවුවා (Spam ෆෝල්ඩරයත් බලන්න).')}catch(e){ferr(e)}
 }
 if(location.protocol==='file:')document.addEventListener('DOMContentLoaded',()=>lerr('අවවාදයයි: ෆයිල් එක කෙලින්ම (file://) විවෘත කර ඇත. Login ක්‍රියා නොකරයි — https:// hosting එකක් හරහා විවෘත කරන්න.'));
+// auth state එක ලැබෙන්නේ නැත්නම් login පිටුව පෙන්වන්න
 setTimeout(()=>{if(['tLogin','tDash','tRoom','sJoin','sRoom','tBuild','tShare','zJoin','zRun','tSlides','pRun'].every(x=>$(x).hidden))show('tLogin')},4000);
 async function openRoom(old){
   const tmo=(pr,ms)=>Promise.race([pr,new Promise((_,j)=>setTimeout(()=>j({code:'timeout'}),ms))]);
@@ -1954,7 +1955,8 @@ function printDeck(sl){
 }
 window.addEventListener('afterprint',()=>{document.body.classList.remove('pr');$('prt').innerHTML=''});
 function pmExit(){
-  clearInterval(tmI);$('pmo').hidden=true;$('pmk').hidden=true;$('pmd').hidden=true;lzOn=false;$('pm').classList.remove('lz');$('pm').hidden=true;if(document.fullscreenElement)document.exitFullscreen();
+  clearInterval(tmI);$('pmo').hidden=true;$('pmk').hidden=true;$('pmd').hidden=true;lzOn=false;$('pm').classList.remove('lz');
+  $('pm').hidden=true;if(document.fullscreenElement)document.exitFullscreen();
   if(R&&PD){R.child('deck').remove();R.child('slide').remove();R.child('step').remove()}PD=null;
 }
 $('pm').addEventListener('pointermove',e=>{if(!lzOn)return;const d=$('pmd');d.style.left=e.clientX+'px';d.style.top=e.clientY+'px'});
@@ -1987,7 +1989,7 @@ document.addEventListener('keydown',e=>{
   const k=e.key,kk=k.toLowerCase(),nx=k=='ArrowRight'||k=='PageDown'||k==' ',pv=k=='ArrowLeft'||k=='PageUp';
   if(!$('pm').hidden){
     if(!$('pmk').hidden){$('pmk').hidden=true;e.preventDefault();return}
-    if(!$('pmo').hidden){if(k=='Escape'\vert{}\vert{}kk=='g')$('pmo').hidden=true;return}
+    if(!$('pmo').hidden){if(k=='Escape'||kk=='g')$('pmo').hidden=true;return}
     if(nx||pv){e.preventDefault();pmGo(nx?1:-1)}
     else if(k=='Home')pmJump(0);else if(k=='End')pmJump(PD.length-1);
     else if(kk=='g')pmOv();else if(kk=='b'||k=='.')pmBlack();else if(kk=='l')pmLaser();else if(kk=='n')pmNotes();
