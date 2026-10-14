@@ -1825,7 +1825,7 @@ async function ssView(id){
   ssClose();tvId=id;
   $('ssv').hidden=false;$('ssn').textContent=(S[id]&&S[id].name)||'';$('svm').textContent='සම්බන්ධ වෙමින්…';
   const B=R.child('ss/'+id);
-  await Promise.all(['offer','answer','sc','tc'].map(k=>B.child(k).remove()));
+  try{await Promise.all(['offer','answer','sc','tc'].map(k=>B.child(k).remove()))}catch(e){console.error(e);$('svm').textContent='සම්බන්ධ විය නොහැක: '+(e.code||e.message);return}
   if(tvId!==id)return;
   B.child('offer').on('value',async s=>{
     if(!s.val()||tvId!==id)return;
@@ -1838,7 +1838,7 @@ async function ssView(id){
     await pc.setLocalDescription(await pc.createAnswer());
     B.child('answer').set(JSON.stringify(pc.localDescription));
   });
-  B.child('want').set(Date.now());
+  B.child('want').set(Date.now()).catch(e=>{console.error(e);$('svm').textContent='සම්බන්ධ විය නොහැක: '+(e.code||e.message)});
 }
 function ssClose(){
   if(tvBc)ssBcastStop();
@@ -2523,12 +2523,18 @@ function renderQ(){
 }
 /* ---------- සිසුවා: මගේ තිරය ගුරුවරයාට ---------- */
 async function myStart(get,mode){
+  if(!R||!sid)return alert('පළමුව පන්තියට සම්බන්ධ වන්න');
   if(sstream)myShareStop();
-  try{sstream=await get()}catch(e){return alert('අවසර ලබා දී නැත හෝ ආරම්භ කළ නොහැක')}
+  try{sstream=await get()}catch(e){console.error(e);return alert('කැමරාව/තිරය ආරම්භ කළ නොහැක: '+(e.name||'')+' '+(e.message||''))}
   smode=mode;
   sstream.getVideoTracks()[0].onended=myShareStop;
-  const B=R.child('ss/'+sid);B.onDisconnect().remove();
-  await B.set({on:Date.now(),m:mode});
+  try{
+    const B=R.child('ss/'+sid);await B.onDisconnect().remove();
+    await B.set({on:Date.now(),m:mode});
+  }catch(e){
+    console.error(e);myShareStop();
+    return alert('Share ආරම්භ කළ නොහැක: '+(e.code==='PERMISSION_DENIED'||/permission/i.test(e.message||'')?'Firebase Database Rules මගින් "ss" ලිවීම ප්‍රතික්ෂේප විය (PERMISSION_DENIED).':(e.message||e.code)));
+  }
   $('msb').hidden=true;$('mss').hidden=false;$('mfl').hidden=mode!=='cam';
 }
 function myShare(){
