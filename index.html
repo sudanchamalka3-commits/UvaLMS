@@ -432,7 +432,7 @@ body.kplay #khint{display:block}
 <div class="row"><button class="g2" onclick="copyLink()">සබැඳිය පිටපත් කරන්න</button><button class="g2" onclick="nativeShare()">Share</button></div>
 <a id="rwa" class="btn" target="_blank" rel="noopener">WhatsApp</a>
 <button onclick="bigView()">🖥 විශාල QR / කේතය පෙන්වන්න</button></div>
-<div class="card"><h3>🏆 සිසුන් / Leaderboard (<span id="cnt">0</span>)</h3><div id="sl"></div></div></div>
+<div class="card"><h3>🏆 සිසුන් / Leaderboard (<span id="cnt">0</span>) <button class="g2" id="rnb" onclick="togReal()" style="float:right;width:auto;margin:0;padding:4px 10px;font-size:.75rem">👁 සැබෑ නම්</button></h3><div id="sl"></div></div></div>
 <div class="g">
 <div class="card"><h3>🖥 තිරය Share කිරීම</h3><video id="pv" autoplay muted playsinline></video>
 <div class="row"><button onclick="share()">තිරය Share කරන්න</button><button class="r" onclick="stopShare()">නවත්වන්න</button></div></div>
@@ -1959,6 +1959,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeBig()});
 function copyLink(){navigator.clipboard.writeText($('ju').textContent).then(()=>alert('පිටපත් කරන ලදී ✅'))}
 function listenT(){
   R.child('students').on('value',s=>{S=s.val()||{};drawList();drawSS();wheelSync()});
+  NM={};R.child('names').on('value',s=>{NM=s.val()||{};rnRedraw()},()=>{});
   R.child('ss').on('value',s=>{SSH=s.val()||{};drawSS()});
   R.child('q').on('value',s=>{Q=s.val();drawRes();drawList();tqSync()});
   R.child('answers').on('value',s=>{A=s.val()||{};drawRes();drawList()});
@@ -1967,10 +1968,15 @@ function listenT(){
   PT={};PTsig=null;mTab('tRoom','c');
   R.child('paint').on('value',s=>{PT=s.val()||{};paintDraw()},e=>{const g=$('ptg');if(g)g.innerHTML='<small>Paint චිත්‍ර කියවිය නොහැක: '+esc(e.code=='PERMISSION_DENIED'?'Database Rules වල rooms/…/paint කියවීමට ඉඩ දෙන්න.':(e.message||e.code))+'</small>'});
 }
+let NM={},SHOWREAL=true;
+const rnm=id=>(SHOWREAL&&NM[id])||(S[id]&&S[id].name)||'';
+const RS=()=>{const o={};Object.keys(S).forEach(id=>o[id]={name:rnm(id)});return o};
+function rnRedraw(){try{drawList();drawSS();paintDraw();drawRes()}catch(e){}}
+function togReal(){SHOWREAL=!SHOWREAL;$('rnb').textContent=SHOWREAL?'👁 සැබෑ නම්':'🙈 Nicknames';rnRedraw()}
 function drawList(){
   const e=Object.entries(S).sort((a,b)=>(b[1].score||0)-(a[1].score||0));
   $('cnt').textContent=e.filter(x=>x[1].online).length+'/'+e.length;
-  $('sl').innerHTML=e.map(([id,x])=>`<div class="st"><span class="d ${x.online?'on':''}"></span>${['🥇','🥈','🥉'][e.findIndex(y=>y[0]==id)]||''} ${esc(x.name)}${Q&&Q.open&&A[id]&&A[id].q==Q.id?' ✓':''}<b>${x.score||0}</b></div>`).join('');
+  $('sl').innerHTML=e.map(([id,x])=>`<div class="st"><span class="d ${x.online?'on':''}"></span>${['🥇','🥈','🥉'][e.findIndex(y=>y[0]==id)]||''} ${esc(rnm(id)||x.name)}${SHOWREAL&&NM[id]&&x.name?` <small style="opacity:.55">· ${esc(x.name)}</small>`:''}${Q&&Q.open&&A[id]&&A[id].q==Q.id?' ✓':''}<b>${x.score||0}</b></div>`).join('');
 }
 async function share(){
   if(tvBc)ssBcastStop();
@@ -1987,11 +1993,11 @@ function drawSS(){
   const e=Object.entries(SSH||{}).filter(x=>x[1]&&x[1].on);
   if(tvId&&!(SSH[tvId]&&SSH[tvId].on))ssClose();
   const l=$('ssl');if(!l)return;
-  l.innerHTML=e.length?e.map(([id])=>`<div class="st"><span class="d on"></span>${esc((S[id]&&S[id].name)||'සිසුවා')}<button class="g2" onclick="ssView('${esc(id)}')">👁 බලන්න</button></div>`).join(''):'<small>තිරය Share කරන සිසුන් නැත</small>';
+  l.innerHTML=e.length?e.map(([id])=>`<div class="st"><span class="d on"></span>${esc(rnm(id)||'සිසුවා')}<button class="g2" onclick="ssView('${esc(id)}')">👁 බලන්න</button></div>`).join(''):'<small>තිරය Share කරන සිසුන් නැත</small>';
 }
 async function ssView(id){
   ssClose();tvId=id;
-  $('ssv').hidden=false;$('ssn').textContent=(S[id]&&S[id].name)||'';$('svm').textContent='සම්බන්ධ වෙමින්…';
+  $('ssv').hidden=false;$('ssn').textContent=rnm(id)||'';$('svm').textContent='සම්බන්ධ වෙමින්…';
   const B=R.child('ss/'+id);
   await Promise.all(['offer','answer','sc','tc'].map(k=>B.child(k).remove()));
   if(tvId!==id)return;
@@ -2114,7 +2120,7 @@ function drawRes(){
 /* ---- Random student wheel ---- */
 let WN=[],Wrot=0,Wspin=false,Wdirty=false,WX={},Wlast=null;
 const WCOL=['#ff6b6b','#ffa94d','#ffd43b','#69db7c','#4dabf7','#b197fc'];
-function wheelList(){const on=$('who').checked;return Object.entries(S).filter(([id,x])=>x&&x.name&&!WX[id]&&(!on||x.online)).map(([id,x])=>({id,name:x.name}))}
+function wheelList(){const on=$('who').checked;return Object.entries(S).filter(([id,x])=>x&&x.name&&!WX[id]&&(!on||x.online)).map(([id,x])=>({id,name:rnm(id)||x.name}))}
 function wheelSync(){
   if(!$('whc'))return;if(Wspin){Wdirty=true;return}
   WN=wheelList();wheelDraw();
@@ -2212,18 +2218,18 @@ function shareBar(e,q){
   if(q.open)return '';
   let h=`<div class="row"><button class="${q.gallery?'r':'g2'}" data-gal="1">${q.gallery?'⏹ චිත්‍ර ගැලරිය නවත්වන්න':'🖼 සියලු චිත්‍ර පන්තියට පෙන්වන්න'}</button></div>`;
   const s=q.spot&&e.find(([id])=>id==q.spot);
-  if(s)h+=`<div class="spb"><b>📣 පන්තියට පෙන්වමින්: ${esc((S[s[0]]||{}).name||'—')}</b><img src="${esc(s[1].a)}" alt="" onclick="zoom(this)"></div>`;
+  if(s)h+=`<div class="spb"><b>📣 පන්තියට පෙන්වමින්: ${esc(rnm(s[0])||'—')}</b><img src="${esc(s[1].a)}" alt="" onclick="zoom(this)"></div>`;
   return h;
 }
 function artGrid(e,q){
   return '<div class="rg">'+e.map(([id,x])=>{const on=q.spot==id;
-    return `<div class="rc${on?' spot':''}"><img src="${esc(x.a)}" alt="" onclick="zoom(this)"><div class="lbl">${esc((S[id]||{}).name||'—')}</div>${q.open?'':`<button class="${on?'r':'g2'}" data-sp="${esc(id)}" style="font-size:.8rem;padding:6px 4px;margin:4px 0 0">${on?'⏹ නවත්වන්න':'📣 පන්තියට පෙන්වන්න'}</button>`}</div>`}).join('')+'</div>';
+    return `<div class="rc${on?' spot':''}"><img src="${esc(x.a)}" alt="" onclick="zoom(this)"><div class="lbl">${esc(rnm(id)||'—')}</div>${q.open?'':`<button class="${on?'r':'g2'}" data-sp="${esc(id)}" style="font-size:.8rem;padding:6px 4px;margin:4px 0 0">${on?'⏹ නවත්වන්න':'📣 පන්තියට පෙන්වන්න'}</button>`}</div>`}).join('')+'</div>';
 }
 function drawArtRes(){
   const q=Q,e=Object.entries(A).filter(([,x])=>x.q==q.id&&okImg(x.a));
   $('res').onclick=resClick;
   let h=`<p><b>${esc(q.text)}</b> <small>(${TL.draw}) චිත්‍ර ${e.length}</small></p>`;
-  if(q.podium){$('res').innerHTML=h+shareBar(e,q)+podiumHTML(rankArt(e,RT[q.id]),S)+(e.length?'<h3>📣 චිත්‍ර පන්තියට පෙන්වන්න</h3>'+artGrid(e,q):'');return}
+  if(q.podium){$('res').innerHTML=h+shareBar(e,q)+podiumHTML(rankArt(e,RT[q.id]),RS())+(e.length?'<h3>📣 චිත්‍ර පන්තියට පෙන්වන්න</h3>'+artGrid(e,q):'');return}
   h+=q.rate?`<p>⭐ Rating ක්‍රියාත්මකයි — Rating දුන් සිසුන්: <b id="rp">${rpTxt()}</b></p><button onclick="showPodium()">🏆 Rating අවසන් කර Podium පෙන්වන්න</button>`
            :`<button onclick="startRate()">⭐ ඇඳීම නවත්වා Rating ආරම්භ කරන්න</button>`;
   $('res').innerHTML=h+shareBar(e,q)+artGrid(e,q);
@@ -2886,19 +2892,30 @@ function myShareStop(){
   if(R&&sid)R.child('ss/'+sid).remove();
   $('msb').hidden=false;$('mss').hidden=true;
 }
+/* ---- Nicknames: students see only nicknames; real names live in rooms/<code>/names (teacher-only via DB rules) ---- */
+const NK_A=['Brave','Happy','Swift','Clever','Bright','Lucky','Calm','Bold','Jolly','Mighty','Sunny','Witty','Cool','Kind','Smart','Speedy'];
+const NK_B=[['🦁','Lion'],['🐯','Tiger'],['🐼','Panda'],['🦊','Fox'],['🐬','Dolphin'],['🦅','Eagle'],['🐘','Elephant'],['🐢','Turtle'],['🦉','Owl'],['🐧','Penguin'],['🐨','Koala'],['🦋','Butterfly'],['🐝','Bee'],['🐒','Monkey'],['🦄','Unicorn'],['🐙','Octopus']];
+function mkNick(used){
+  for(let i=0;i<80;i++){const b=NK_B[Math.random()*NK_B.length|0],n=b[0]+' '+NK_A[Math.random()*NK_A.length|0]+' '+b[1];if(!used.has(n))return n}
+  let n;do{n='🌟 Star '+(100+Math.random()*900|0)}while(used.has(n));return n;
+}
 async function sJoin(){
   const code=$('sc').value.trim().toUpperCase(),name=$('sn').value.trim().slice(0,30);if(!code||!name)return alert('කේතය සහ නම අවශ්‍යයි');
   try{
     joining=true;sid=(await auth.signInAnonymously()).user.uid;R=db.ref('rooms/'+code);
     if(!(await R.child('owner').once('value')).exists()){joining=false;return alert('පන්ති කේතය වැරදියි')}
     try{localStorage.sn=name}catch(e){}
-    await R.child('students/'+sid).update({name});$('me').textContent=name;show('sRoom');mTab('sRoom','c');
+    const used=new Set(Object.values((await R.child('students').once('value')).val()||{}).map(x=>x&&x.name));
+    let nick=(await R.child('students/'+sid+'/nick').once('value')).val();if(!nick)nick=mkNick(used);
+    await R.child('students/'+sid).update({name:nick,nick});
+    R.child('names/'+sid).set(name).catch(()=>{});
+    $('me').textContent=nick;show('sRoom');mTab('sRoom','c');
   }catch(e){joining=false;return alert('සම්බන්ධ විය නොහැක: '+e.message)}
   const pr=R.child('students/'+sid+'/online');
   db.ref('.info/connected').on('value',s=>{if(s.val()){pr.onDisconnect().set(false);pr.set(true)}});
   R.child('owner').on('value',s=>{if(!s.exists()){alert('පන්තිය අවසන් විය');location.href=location.pathname}});
   R.child('students/'+sid+'/score').on('value',s=>$('sc2').textContent=s.val()||0);
-  R.child('students').on('value',s=>{SS=s.val()||{};const v=Object.entries(SS).sort((a,b)=>(b[1].score||0)-(a[1].score||0)),i=v.findIndex(x=>x[0]==sid);if(i>=0)$('me').textContent=($('sn').value.trim()||'')+' · 🏆 '+(i+1)+'/'+v.length});
+  R.child('students').on('value',s=>{SS=s.val()||{};const v=Object.entries(SS).sort((a,b)=>(b[1].score||0)-(a[1].score||0)),i=v.findIndex(x=>x[0]==sid);if(i>=0)$('me').textContent=((SS[sid]||{}).name||'')+' · 🏆 '+(i+1)+'/'+v.length});
   R.child('sharing').on('value',s=>{
     if(s.val()){$('vm').textContent='සම්බන්ධ වෙමින්…';R.child('sig/'+sid).remove().then(()=>R.child('sig/'+sid+'/ready').set(Date.now()))}
     else{if(spc)spc.close();$('vid').srcObject=null;$('vm').textContent='ගුරුවරයා තිරය Share කරන තෙක් රැඳී සිටින්න…'}});
@@ -2951,7 +2968,7 @@ async function paintSend(){
   let c;try{c=$('sPf').contentWindow.__paintGet()}catch(e){m.textContent='Paint තවම සූදානම් නැත. තත්පරයකින් නැවත උත්සාහ කරන්න.';return}
   const u=fitImg(c,800,180000);if(!u){m.textContent='චිත්‍රය ඉතා විශාලයි. කුඩා කර නැවත යවන්න (Image size).';return}
   btn.disabled=true;m.textContent='යවමින්…';
-  const nm=($('sn').value||'').trim().slice(0,30)||(SS[sid]||{}).name||'—';
+  const nm=(SS[sid]||{}).name||'—';
   try{
     await Promise.race([R.child('paint/'+sid).set({n:nm,a:u,t:Date.now()}),new Promise((_,j)=>setTimeout(()=>j({code:'timeout'}),8000))]);
     m.textContent='✓ ගුරුවරයාට යැව්වා ('+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+')';
@@ -2966,12 +2983,12 @@ function paintDraw(){
   if(sig!==PTsig){if(PTsig!==null&&e.length&&$('tRoom').dataset.tab!='p')$('mtp').classList.add('nw');PTsig=sig}
   const tm=t=>t?new Date(t).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';
   g.className=e.length?'rg':'';
-  g.innerHTML=e.length?e.map(([id,x])=>`<div class="rc"><img src="${esc(x.a)}" alt="" onclick="zoom(this)"><div class="lbl"><b>${esc(x.n||'—')}</b> · ${tm(x.t)}</div><div class="row" style="gap:4px"><button class="g2" data-dl="${esc(id)}" style="font-size:.8rem;padding:6px 4px;margin:4px 0 0">⬇ බාගන්න</button><button class="r" data-rm="${esc(id)}" style="font-size:.8rem;padding:6px 4px;margin:4px 0 0" aria-label="මකන්න">🗑</button></div></div>`).join(''):'<small>තවම චිත්‍ර නැත. සිසුන් Paint tab එකෙන් යැවූ චිත්‍ර මෙහි පෙනේ.</small>';
+  g.innerHTML=e.length?e.map(([id,x])=>`<div class="rc"><img src="${esc(x.a)}" alt="" onclick="zoom(this)"><div class="lbl"><b>${esc((SHOWREAL&&NM[id])||x.n||'—')}</b> · ${tm(x.t)}</div><div class="row" style="gap:4px"><button class="g2" data-dl="${esc(id)}" style="font-size:.8rem;padding:6px 4px;margin:4px 0 0">⬇ බාගන්න</button><button class="r" data-rm="${esc(id)}" style="font-size:.8rem;padding:6px 4px;margin:4px 0 0" aria-label="මකන්න">🗑</button></div></div>`).join(''):'<small>තවම චිත්‍ර නැත. සිසුන් Paint tab එකෙන් යැවූ චිත්‍ර මෙහි පෙනේ.</small>';
   g.onclick=ev=>{
     const b=ev.target.closest('button[data-dl],button[data-rm]');if(!b)return;
     if(b.dataset.rm){if(R&&confirm('මෙම චිත්‍රය මකන්නද?'))R.child('paint/'+b.dataset.rm).remove().catch(spErr);return}
     const x=PT[b.dataset.dl];if(!x)return;
-    const a=document.createElement('a');a.href=x.a;a.download='paint-'+String(x.n||'chithra').replace(/[\\/:*?"<>|]/g,'')+(/^data:image\/png/.test(x.a)?'.png':'.jpg');
+    const a=document.createElement('a');a.href=x.a;a.download='paint-'+String((SHOWREAL&&NM[b.dataset.dl])||x.n||'chithra').replace(/[\\/:*?"<>|]/g,'')+(/^data:image\/png/.test(x.a)?'.png':'.jpg');
     document.body.append(a);a.click();a.remove();
   };
 }
