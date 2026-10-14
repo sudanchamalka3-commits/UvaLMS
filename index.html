@@ -283,6 +283,9 @@ small{color:#6b6b8a}
 <div class="g">
 <div class="card"><h3>🖥 තිරය Share කිරීම</h3><video id="pv" autoplay muted playsinline></video>
 <div class="row"><button onclick="share()">තිරය Share කරන්න</button><button class="r" onclick="stopShare()">නවත්වන්න</button></div></div>
+<div class="card"><h3>🎓 සිසුන්ගේ තිරය</h3><div id="ssl"><small>තිරය Share කරන සිසුන් නැත</small></div>
+<div id="ssv" hidden><b id="ssn"></b><video id="sv" autoplay muted playsinline></video><div id="svm"></div>
+<div class="row" style="flex-wrap:wrap"><button onclick="ssFull()">⛶ පන්තියට පෙන්වන්න (සම්පූර්ණ තිරය)</button><button class="g2" id="ssb" onclick="ssBcast()">📡 සියලු සිසුන්ගේ තිරයටත් යවන්න</button><button class="r" onclick="ssClose()">වසන්න</button></div></div></div>
 <div class="card"><h3>⚡ Live ප්‍රශ්නය</h3>
 <button onclick="show('tBuild')">ප්‍රශ්නයක් සාදන්න / යවන්න</button>
 <button class="r" onclick="closeQ()">වසා ලකුණු දෙන්න</button><div id="res"></div></div></div>
@@ -300,6 +303,9 @@ small{color:#6b6b8a}
 <button class="g2" onclick="$('sds').requestFullscreen&&$('sds').requestFullscreen()">සම්පූර්ණ තිරය</button></div>
 <div class="card"><video id="vid" autoplay muted playsinline></video><div id="vm">ගුරුවරයා තිරය Share කරන තෙක් රැඳී සිටින්න…</div>
 <button class="g2" onclick="$('vid').requestFullscreen&&$('vid').requestFullscreen()">සම්පූර්ණ තිරය</button></div>
+<div class="card"><h3>📤 මගේ තිරය ගුරුවරයාට</h3><button id="msb" onclick="myShare()">මගේ තිරය Share කරන්න</button>
+<div id="mss" hidden><small>ඔබේ තිරය ගුරුවරයාට පෙනෙයි…</small><button class="r" onclick="myShareStop()">නවත්වන්න</button></div>
+<small>ගුරුවරයා තෝරා ගත් විට පමණක් ඔබේ තිරය ඔහුට පෙනේ.</small></div>
 <div class="card" id="qb">ප්‍රශ්නයක් එනතුරු රැඳී සිටින්න…</div></div>
 
 <div class="v" id="tBuild" hidden><div class="card"><h3>✏️ ප්‍රශ්නයක් සාදන්න</h3>
@@ -1713,6 +1719,7 @@ const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
 const C0=(new URLSearchParams(location.search).get('c')||'').toUpperCase();
 let R,Q,A={},S={},stream,sid,pcs={},watched={},q0,my,spc,JU='',joining=false;
 let RT={},SS={},RA=null,rh=null,rtok=0;
+let SSH={},tvId=null,tvpc=null,tvStream=null,tvBc=false,sstream=null,sspc=null;
 let deckD={slides:[]},bsi=0,editId=null,PC={},PD=null,pi=0,PV=null,pvi=0,SD=null,SI=null,pStep=0,pNts=[],tmT=0,tmI=null,lastI=-1,sStep=0,sLast=-1,lzOn=false,ntOn=false;
 
 db.ref('.info/connected').on('value',s=>{$('net').textContent=s.val()?'Online':'Offline';$('net').className=s.val()?'on':''});
@@ -1785,7 +1792,8 @@ document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeBig()});
 function copyLink(){navigator.clipboard.writeText($('ju').textContent).then(()=>alert('පිටපත් කරන ලදී ✅'))}
 function listenT(){
-  R.child('students').on('value',s=>{S=s.val()||{};drawList()});
+  R.child('students').on('value',s=>{S=s.val()||{};drawList();drawSS()});
+  R.child('ss').on('value',s=>{SSH=s.val()||{};drawSS()});
   R.child('q').on('value',s=>{Q=s.val();drawRes();drawList()});
   R.child('answers').on('value',s=>{A=s.val()||{};drawRes();drawList()});
   R.child('ratings').on('value',s=>{RT=s.val()||{};Q&&Q.t=='draw'&&Q.podium?drawRes():updProg()});
@@ -1797,12 +1805,65 @@ function drawList(){
   $('sl').innerHTML=e.map(([id,x])=>`<div class="st"><span class="d ${x.online?'on':''}"></span>${['🥇','🥈','🥉'][e.findIndex(y=>y[0]==id)]||''} ${esc(x.name)}${Q&&Q.open&&A[id]&&A[id].q==Q.id?' ✓':''}<b>${x.score||0}</b></div>`).join('');
 }
 async function share(){
+  if(tvBc)ssBcastStop();
   try{stream=await navigator.mediaDevices.getDisplayMedia({video:true})}catch(e){return}
   $('pv').srcObject=stream;stream.getVideoTracks()[0].onended=stopShare;R.child('sharing').set(true);
 }
 function stopShare(){
+  if(tvBc){ssBcastStop();return}
   if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;$('pv').srcObject=null;
   Object.values(pcs).forEach(p=>p.close());pcs={};if(R)R.child('sharing').set(false);
+}
+/* ---------- සිසුන්ගේ තිරය → ගුරුවරයා → පන්තිය ---------- */
+function drawSS(){
+  const e=Object.entries(SSH||{}).filter(x=>x[1]&&x[1].on);
+  if(tvId&&!(SSH[tvId]&&SSH[tvId].on))ssClose();
+  const l=$('ssl');if(!l)return;
+  l.innerHTML=e.length?e.map(([id])=>`<div class="st"><span class="d on"></span>${esc((S[id]&&S[id].name)||'සිසුවා')}<button class="g2" onclick="ssView('${esc(id)}')">👁 බලන්න</button></div>`).join(''):'<small>තිරය Share කරන සිසුන් නැත</small>';
+}
+async function ssView(id){
+  ssClose();tvId=id;
+  $('ssv').hidden=false;$('ssn').textContent=(S[id]&&S[id].name)||'';$('svm').textContent='සම්බන්ධ වෙමින්…';
+  const B=R.child('ss/'+id);
+  await Promise.all(['offer','answer','sc','tc'].map(k=>B.child(k).remove()));
+  if(tvId!==id)return;
+  B.child('offer').on('value',async s=>{
+    if(!s.val()||tvId!==id)return;
+    if(tvpc)tvpc.close();
+    const pc=tvpc=new RTCPeerConnection(ICE);
+    pc.ontrack=e=>{tvStream=e.streams[0];$('sv').srcObject=tvStream;$('svm').textContent=''};
+    pc.onicecandidate=e=>e.candidate&&B.child('tc').push(JSON.stringify(e.candidate));
+    await pc.setRemoteDescription(JSON.parse(s.val()));
+    B.child('sc').on('child_added',c=>pc.addIceCandidate(JSON.parse(c.val())).catch(()=>{}));
+    await pc.setLocalDescription(await pc.createAnswer());
+    B.child('answer').set(JSON.stringify(pc.localDescription));
+  });
+  B.child('want').set(Date.now());
+}
+function ssClose(){
+  if(tvBc)ssBcastStop();
+  if(tvId&&R){const B=R.child('ss/'+tvId);B.child('offer').off();B.child('sc').off();B.child('want').remove().catch(()=>{})}
+  if(tvpc){tvpc.close();tvpc=null}
+  tvStream=null;tvId=null;
+  const v=$('sv');if(v)v.srcObject=null;
+  const p=$('ssv');if(p)p.hidden=true;
+  if(document.fullscreenElement&&document.fullscreenElement.id==='sv')document.exitFullscreen().catch(()=>{});
+}
+function ssFull(){const v=$('sv');if(v.requestFullscreen)v.requestFullscreen().catch(()=>{})}
+function ssBcast(){
+  if(tvBc)return ssBcastStop();
+  if(!tvStream)return alert('සිසුවාගේ තිරය තවම සම්බන්ධ වී නැත');
+  stopShare();
+  stream=tvStream;tvBc=true;$('pv').srcObject=stream;
+  $('ssb').textContent='⏹ සිසුන්ට යැවීම නවත්වන්න';
+  R.child('sharing').set(true);
+}
+function ssBcastStop(){
+  if(!tvBc)return;tvBc=false;
+  Object.values(pcs).forEach(p=>p.close());pcs={};
+  stream=null;$('pv').srcObject=null;
+  if(R)R.child('sharing').set(false);
+  $('ssb').textContent='📡 සියලු සිසුන්ගේ තිරයටත් යවන්න';
 }
 function watch(id){
   if(watched[id])return;watched[id]=1;
@@ -2032,7 +2093,7 @@ async function zEnd(){
 bType();drawDraft();
 function endClass(){
   if(!confirm('පන්තිය අවසන් කරන්නද? සියලු දත්ත මැකෙනු ඇත.'))return;
-  stopShare();R.remove();localStorage.removeItem('room');R.off();R=null;watched={};A={};S={};RT={};Q=null;
+  ssClose();stopShare();R.remove();localStorage.removeItem('room');R.off();R=null;watched={};A={};S={};RT={};Q=null;
   $('rs').hidden=true;show('tDash');
 }
 
@@ -2460,6 +2521,21 @@ function renderQ(){
   if(q.t=='draw'&&!q.open)return q.podium?stuPodium(q):stuRate(q);
   drawQ($('qb'),q,my&&my.q==q.id?my.a:null,q.open,a=>R.child('answers/'+sid).set({q:q.id,a}));
 }
+/* ---------- සිසුවා: මගේ තිරය ගුරුවරයාට ---------- */
+async function myShare(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getDisplayMedia)return alert('මෙම උපාංගයෙන් තිරය Share කළ නොහැක. පරිගණකයක (Chrome / Edge) භාවිතා කරන්න.');
+  try{sstream=await navigator.mediaDevices.getDisplayMedia({video:true})}catch(e){return}
+  sstream.getVideoTracks()[0].onended=myShareStop;
+  const B=R.child('ss/'+sid);B.onDisconnect().remove();
+  await B.set({on:Date.now()});
+  $('msb').hidden=true;$('mss').hidden=false;
+}
+function myShareStop(){
+  if(sstream)sstream.getTracks().forEach(t=>t.stop());sstream=null;
+  if(sspc){sspc.close();sspc=null}
+  if(R&&sid)R.child('ss/'+sid).remove();
+  $('msb').hidden=false;$('mss').hidden=true;
+}
 async function sJoin(){
   const code=$('sc').value.trim().toUpperCase(),name=$('sn').value.trim().slice(0,30);if(!code||!name)return alert('කේතය සහ නම අවශ්‍යයි');
   try{
@@ -2476,6 +2552,19 @@ async function sJoin(){
   R.child('sharing').on('value',s=>{
     if(s.val()){$('vm').textContent='සම්බන්ධ වෙමින්…';R.child('sig/'+sid).remove().then(()=>R.child('sig/'+sid+'/ready').set(Date.now()))}
     else{if(spc)spc.close();$('vid').srcObject=null;$('vm').textContent='ගුරුවරයා තිරය Share කරන තෙක් රැඳී සිටින්න…'}});
+  R.child('ss/'+sid+'/want').on('value',async s=>{
+    if(!s.val()||!sstream)return;
+    if(sspc)sspc.close();
+    const pc=sspc=new RTCPeerConnection(ICE),B=R.child('ss/'+sid);
+    B.child('answer').off();B.child('tc').off();
+    sstream.getTracks().forEach(t=>pc.addTrack(t,sstream));
+    pc.onicecandidate=e=>e.candidate&&B.child('sc').push(JSON.stringify(e.candidate));
+    await pc.setLocalDescription(await pc.createOffer());
+    await B.child('offer').set(JSON.stringify(pc.localDescription));
+    B.child('answer').on('value',async a=>{
+      if(a.val()&&!pc.remoteDescription){await pc.setRemoteDescription(JSON.parse(a.val()));
+        B.child('tc').on('child_added',c=>pc.addIceCandidate(JSON.parse(c.val())).catch(()=>{}))}});
+  });
   R.child('sig/'+sid+'/offer').on('value',async s=>{
     if(!s.val())return;
     if(spc)spc.close();const pc=spc=new RTCPeerConnection(ICE),tc=R.child('sig/'+sid+'/tc');tc.off();
