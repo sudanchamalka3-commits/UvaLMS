@@ -1991,7 +1991,7 @@ const rid=()=>{const L='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let c='';for(let i=0;i
 const norm=x=>String(x).trim().toLowerCase();
 const TL={mcq:'MCQ',tf:'සත්‍ය/අසත්‍ය',multi:'බහු පිළිතුරු',text:'කෙටි පිළිතුර',poll:'Poll'};
 const HINT={mcq:'නිවැරදි පිළිතුර ලකුණු කරන්න',tf:'නිවැරදි පිළිතුර ලකුණු කරන්න',multi:'නිවැරදි සියල්ල ලකුණු කරන්න',text:'පිළිගත හැකි පිළිතුරු (ලොකු/කුඩා අකුරු නොගැටේ)',poll:'ලකුණු නැත – අදහස් එකතු කිරීමට පමණි'};
-const NEW=['cloud','open','draw'];Object.assign(TL,{cloud:'Word Cloud',open:'විවෘත',draw:'චිත්‍ර'});Object.assign(HINT,{cloud:'සිසුන් එක් වචනයක්/වාක්‍ය ඛණ්ඩයක් යවයි – ලකුණු නැත',open:'සිසුන් තම අදහස් ලියයි – ලකුණු නැත',draw:'සිසුන් චිත්‍රයක් ඇඳ යවයි → අනෙක් සිසුන් ⭐ Rating දෙයි → හොඳම 3 Podium එකේ පෙන්වයි'});
+const NEW=['cloud','open','draw'];Object.assign(TL,{cloud:'Word Cloud',open:'විවෘත',draw:'චිත්‍ර'});Object.assign(HINT,{cloud:'සිසුන් එක් වචනයක්/වාක්‍ය ඛණ්ඩයක් යවයි – ලකුණු නැත',open:'සිසුන් තම අදහස් ලියයි – ලකුණු නැත',draw:'සිසුන් චිත්‍රයක් ඇඳ යවයි, නැතහොත් Paint එකෙන් ඇඳපු චිත්‍රය (PNG / JPG / BMP) Upload කරයි → අනෙක් සිසුන් ⭐ Rating දෙයි → හොඳම 3 Podium එකේ පෙන්වයි'});
 let draft=[];
 function grade(q,a){
   if(a==null)return 0;const t=q.t||'mcq';
@@ -2050,6 +2050,19 @@ function drawRes(){
 
 /* ---- Drawing: rating & podium ---- */
 const okImg=a=>typeof a=='string'&&/^data:image\/(jpeg|png);base64,/.test(a);
+/* Paint (or any picture file) -> small PNG/JPEG data URL that fits the database */
+function fitImg(im){
+  const M=640,LIM=140000;let w=im.naturalWidth,h=im.naturalHeight;if(!w||!h)return '';
+  const k=Math.min(1,M/Math.max(w,h));w=Math.round(w*k);h=Math.round(h*k);
+  const c=document.createElement('canvas'),x=c.getContext('2d');
+  for(let z=1;z>.3;z-=.15){
+    c.width=Math.max(1,Math.round(w*z));c.height=Math.max(1,Math.round(h*z));
+    x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);
+    let u=c.toDataURL('image/png');if(u.length<=LIM)return u;
+    u=c.toDataURL('image/jpeg',.75);if(u.length<=LIM)return u;
+  }
+  return '';
+}
 const hs=t=>{let h=7;for(const c of t)h=(h*31+c.charCodeAt(0))|0;return h};
 function zoom(i){const l=$('lbx');l.querySelector('img').src=i.src;l.hidden=false}
 function rankArt(e,rt){
@@ -2192,13 +2205,25 @@ function initDraw(b,send){
   c.onpointerdown=e=>{on=true;dirty=true;c.setPointerCapture(e.pointerId);st();const[a,d]=pt(e);x.beginPath();x.moveTo(a,d);x.lineTo(a+.1,d+.1);x.stroke()};
   c.onpointermove=e=>{if(!on)return;const[a,d]=pt(e);x.lineTo(a,d);x.stroke()};
   c.onpointerup=c.onpointercancel=()=>{on=false;x.globalAlpha=1};
+  const du=b.querySelector('#du'),fi=b.querySelector('#df'),pv=b.querySelector('#upv'),cw=b.querySelector('#cvw');let upU='';
+  du.onclick=()=>fi.click();
+  b.querySelector('#upc').onclick=()=>fi.click();
+  fi.onchange=()=>{
+    const f=fi.files&&fi.files[0];fi.value='';if(!f)return;
+    if(!/^image\//.test(f.type)&&!/\.(bmp|png|jpe?g|gif|webp)$/i.test(f.name))return alert('පින්තූර ගොනුවක් (PNG / JPG / BMP) තෝරන්න');
+    const url=URL.createObjectURL(f),im=new Image();
+    im.onload=()=>{URL.revokeObjectURL(url);const u=fitImg(im);if(!u)return alert('මෙම පින්තූරය ඉතා විශාලයි. කුඩා එකක් තෝරන්න.');
+      upU=u;b.querySelector('#upi').src=u;pv.hidden=false;cw.hidden=true;du.hidden=true};
+    im.onerror=()=>{URL.revokeObjectURL(url);alert('මෙම ගොනුව කියවිය නොහැක. PNG හෝ JPG ලෙස Save කර නැවත උත්සාහ කරන්න.')};
+    im.src=url};
+  b.querySelector('#ups').onclick=()=>{if(upU)send(upU)};
   b.querySelector('#dc').onclick=clr;
   b.querySelector('#db').onclick=()=>{if(!dirty)return alert('මුලින් චිත්‍රයක් අඳින්න');send(c.toDataURL('image/jpeg',.6))};
 }
 function drawQ(b,q,my,open,send){
   const t=q.t||'mcq',has=my!=null;let h=`<b>${esc(q.text)}</b>`;
   if(open){
-    if(t=='draw')h+=has?`<img src="${esc(my)}" style="width:100%;border:1px solid var(--b);border-radius:8px"><p>යවා ඇත ✓</p>`:`<canvas id="cv" width="320" height="320" style="width:100%;max-width:420px;touch-action:none;background:#fff;border:2px solid var(--b);border-radius:8px"></canvas><div class="row"><button class="g2" id="dc">මකන්න</button><button id="db">යවන්න</button></div>`;
+    if(t=='draw')h+=has?`<img src="${esc(my)}" style="width:100%;border:1px solid var(--b);border-radius:8px"><p>යවා ඇත ✓</p>`:`<button class="t3" id="du" style="font-size:1.05rem">📁 Paint එකෙන් ඇඳපු චිත්‍රය Upload කරන්න</button><input id="df" type="file" accept="image/*,.bmp" hidden><div id="upv" hidden><img id="upi" alt="" style="display:block;width:100%;max-width:420px;border:2px solid var(--b);border-radius:8px;background:#fff"><div class="row"><button class="g2" id="upc">වෙනත් ගොනුවක්</button><button id="ups">යවන්න</button></div></div><div id="cvw"><small>නැතහොත් මෙහි ඇඳ යවන්න:</small><canvas id="cv" width="320" height="320" style="display:block;width:100%;max-width:420px;touch-action:none;background:#fff;border:2px solid var(--b);border-radius:8px"></canvas><div class="row"><button class="g2" id="dc">මකන්න</button><button id="db">යවන්න</button></div></div>`;
     else if(t=='cloud'||t=='open')h+=`<${t=='open'?'textarea rows="4"':'input'} id="ta" ${t=='cloud'?'maxlength="30"':'maxlength="500"'} placeholder="${t=='cloud'?'වචනයක් / කෙටි වාක්‍යයක්':'ඔබේ අදහස ලියන්න'}" ${t=='cloud'&&has?'value="'+esc(my)+'"':''} ${has?'disabled':''} style="font:inherit;padding:10px;border-radius:8px;border:1px solid var(--b);width:100%;margin:4px 0">${t=='open'?(has?esc(my):'')+'</textarea>':''}<button id="tb" ${has?'disabled':''}>යවන්න</button>`;
     else if(t=='text')h+=`<input id="ta" placeholder="ඔබේ පිළිතුර" ${has?'disabled':''} value="${has?esc(my):''}"><button id="tb" ${has?'disabled':''}>යවන්න</button>`;
     else if(t=='multi')h+=q.opts.map((o,i)=>`<label class="ro"><input type="checkbox" class="mc" value="${i}" ${has?'disabled':''} ${has&&my.includes(i)?'checked':''} style="width:auto;padding:0;margin:0 8px 0 0">${esc(o)}</label>`).join('')+`<button id="tb" ${has?'disabled':''}>යවන්න</button>`;
