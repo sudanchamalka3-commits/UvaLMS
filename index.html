@@ -373,6 +373,23 @@ body{font-size:15px}
 .st button,.st .btn{min-height:40px}
 .stars button{padding:10px 0}
 }
+
+/* ======== Happy interactive kids background ======== */
+body{background:none!important}
+#kidsBg{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;display:block;touch-action:none}
+body.kplay #kidsBg{z-index:90;pointer-events:auto;cursor:pointer}
+#kfab{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));z-index:60;width:auto;margin:0;padding:12px 18px;border-radius:99px;font-size:1.05rem;background:linear-gradient(#ffa94d,#fd7e14);box-shadow:0 5px 0 #c25e00;animation:kbob 2.4s ease-in-out infinite}
+#kfab:active:not(:disabled){box-shadow:0 1px 0 #c25e00}
+@keyframes kbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+body.kplay #kfab{display:none}
+#kui{position:fixed;left:0;right:0;top:0;z-index:95;display:none;justify-content:space-between;align-items:center;gap:8px;padding:max(10px,env(safe-area-inset-top)) 12px 10px;pointer-events:none}
+body.kplay #kui{display:flex}
+#kui>*{pointer-events:auto}
+#kui button{width:auto;margin:0;padding:10px 16px}
+#kscore{background:#fff;color:#4c1d95;border:3px solid #fff;border-radius:99px;padding:8px 18px;font-weight:700;font-size:1.2rem;box-shadow:0 4px 0 #0002}
+#khint{position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:95;display:none;background:#fffbe6;color:#4c1d95;border:3px solid #fff;border-radius:99px;padding:8px 18px;font-weight:600;box-shadow:0 4px 0 #0002;text-align:center;pointer-events:none;max-width:92vw}
+body.kplay #khint{display:block}
+@media(prefers-reduced-motion:reduce){#kfab{animation:none}}
 </style></head><body>
 <header><span>ICTPLUZ Smart Classroom</span><span id="net">Offline</span></header>
 <div id="jb" hidden><span>Join at <b id="jbu"></b></span><span>Code:</span><span class="code" id="jbc" style="font-size:1.5rem;letter-spacing:4px"></span><button onclick="bigView()">QR ▦</button></div>
@@ -2891,4 +2908,194 @@ document.addEventListener('pointerdown',e=>{
     s.style.left=e.clientX+'px';s.style.top=e.clientY+'px';s.style.setProperty('--dx',(Math.random()*120-60)+'px');s.style.setProperty('--dy',(-30-Math.random()*70)+'px');
     document.body.appendChild(s);setTimeout(()=>s.remove(),850)}
 });
-</script></body></html>
+</script><script>
+/* Happy interactive kids background: ambient scene + tap-to-play mode */
+(()=>{
+const cv=document.createElement('canvas');cv.id='kidsBg';cv.setAttribute('aria-hidden','true');document.body.prepend(cv);
+const x=cv.getContext('2d');
+const fab=document.createElement('button');fab.id='kfab';fab.type='button';fab.innerHTML='🎈 Play!';fab.setAttribute('aria-label','Play with the happy background');
+const ui=document.createElement('div');ui.id='kui';ui.innerHTML='<span id="kscore">🎈 0</span><span><button type="button" class="g2" id="ksnd" aria-label="Sound">🔊</button> <button type="button" class="r" id="kx">✖ Close</button></span>';
+const hint=document.createElement('div');hint.id='khint';hint.textContent='Tap balloons to pop them! Tap the sun, clouds & friends 🌞☁️🦋';
+document.body.append(fab,ui,hint);
+const R=matchMedia('(prefers-reduced-motion:reduce)');
+const rnd=(a,b)=>a+Math.random()*(b-a),pick=a=>a[Math.floor(Math.random()*a.length)];
+const COL=['#ff6b6b','#ffa94d','#ffd43b','#51cf66','#4dabf7','#b197fc','#f783ac'];
+let W=0,H=0,dpr=1,play=false,score=0,snd=true,t=0,last=0,raf=0,ac=null;
+let balloons=[],clouds=[],flies=[],birds=[],parts=[],flowers=[],pts=[];
+let sun={x:0,y:0,r:46,jig:0,giggle:0};
+let ptr={x:-999,y:-999};
+
+function size(){
+  dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;
+  cv.width=W*dpr;cv.height=H*dpr;x.setTransform(dpr,0,0,dpr,0,0);
+  sun.x=W*.84;sun.y=Math.max(70,H*.14);sun.r=Math.max(34,Math.min(60,W*.07));
+  flowers=[];const n=Math.round(W/46);
+  for(let i=0;i<n;i++)flowers.push({x:(i+.5)*W/n+rnd(-10,10),c:pick(COL),h:rnd(18,40),p:rnd(0,6),k:0});
+  seed();draw(0);
+}
+function seed(){
+  const nb=W<600?6:10,nc=W<600?3:5,nf=W<600?3:5;
+  while(balloons.length<nb)addBalloon(true);
+  balloons.length=Math.min(balloons.length,nb+(play?6:0));
+  if(!clouds.length)for(let i=0;i<nc;i++)clouds.push({x:rnd(0,W),y:rnd(.08,.4)*H,s:rnd(.7,1.3),v:rnd(8,20),sq:0});
+  if(!flies.length)for(let i=0;i<nf;i++)flies.push({x:rnd(0,W),y:rnd(.3,.8)*H,vx:rnd(-20,20),vy:rnd(-20,20),c:pick(COL),p:rnd(0,6),tx:rnd(0,W),ty:rnd(.3,.8)*H});
+  if(!birds.length)for(let i=0;i<2;i++)birds.push({x:rnd(-W,0),y:rnd(.1,.35)*H,v:rnd(40,70),p:rnd(0,6)});
+}
+function addBalloon(init){
+  const r=rnd(22,34);
+  balloons.push({x:rnd(r,W-r),y:init?rnd(0,H):H+r+rnd(0,H*.5),r,c:pick(COL),v:rnd(18,42),ph:rnd(0,6),sw:rnd(10,26),face:Math.random()<.5,pop:0});
+}
+function ping(f,d,type,v){
+  if(!snd)return;
+  try{
+    ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    const o=ac.createOscillator(),g=ac.createGain();o.type=type||'sine';
+    o.frequency.setValueAtTime(f,ac.currentTime);o.frequency.exponentialRampToValueAtTime(f*1.8,ac.currentTime+d);
+    g.gain.setValueAtTime(v||.12,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);
+    o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d);
+  }catch(e){}
+}
+function burst(px,py,col,n,em){
+  for(let i=0;i<n;i++){
+    const a=rnd(0,6.283),s=rnd(80,260);
+    parts.push({x:px,y:py,vx:Math.cos(a)*s,vy:Math.sin(a)*s-60,l:1,c:col||pick(COL),e:em&&Math.random()<.5?pick(['⭐','✨','💖','🌟']):null,r:rnd(3,6)});
+  }
+}
+function face(cx,cy,s,happy){
+  x.fillStyle='#4c1d95';x.beginPath();x.arc(cx-s*.35,cy-s*.1,s*.09,0,7);x.arc(cx+s*.35,cy-s*.1,s*.09,0,7);x.fill();
+  x.strokeStyle='#4c1d95';x.lineWidth=Math.max(2,s*.07);x.lineCap='round';x.beginPath();
+  x.arc(cx,cy+s*.05,s*.3,.15*Math.PI,.85*Math.PI);x.stroke();
+  x.fillStyle='#ff8fab55';x.beginPath();x.arc(cx-s*.6,cy+s*.2,s*.14,0,7);x.arc(cx+s*.6,cy+s*.2,s*.14,0,7);x.fill();
+}
+function drawSun(){
+  const s=sun,g=s.giggle>0?Math.sin(t*30)*.08*Math.min(1,s.giggle):0;
+  x.save();x.translate(s.x,s.y);x.rotate(g);
+  x.save();x.rotate(t*.25);x.strokeStyle='#ffd43b';x.lineWidth=6;x.lineCap='round';
+  for(let i=0;i<12;i++){x.rotate(Math.PI/6);x.beginPath();x.moveTo(s.r*1.25,0);x.lineTo(s.r*(1.5+.15*Math.sin(t*3+i)),0);x.stroke()}
+  x.restore();
+  const gr=x.createRadialGradient(-s.r*.3,-s.r*.3,s.r*.1,0,0,s.r);gr.addColorStop(0,'#fff3a0');gr.addColorStop(1,'#ffc928');
+  x.fillStyle=gr;x.beginPath();x.arc(0,0,s.r,0,7);x.fill();face(0,0,s.r,true);
+  x.restore();
+}
+function cloudPath(c){
+  x.save();x.translate(c.x,c.y);x.scale(c.s*(1+c.sq*.1),c.s*(1-c.sq*.1));
+  x.fillStyle='#fff';x.shadowColor='#7c3aed22';x.shadowBlur=10;x.beginPath();
+  x.arc(0,0,26,0,7);x.arc(30,-12,32,0,7);x.arc(64,0,26,0,7);x.rect(0,0,64,26);x.fill();x.shadowBlur=0;
+  face(32,6,26,true);x.restore();
+}
+function drawBalloon(b){
+  const bx=b.x+Math.sin(t*1.2+b.ph)*b.sw*.3,by=b.y;
+  x.strokeStyle='#8884';x.lineWidth=1.5;x.beginPath();x.moveTo(bx,by+b.r*1.2);
+  x.quadraticCurveTo(bx+Math.sin(t*2+b.ph)*8,by+b.r*2,bx,by+b.r*2.6);x.stroke();
+  x.fillStyle=b.c;x.beginPath();x.ellipse(bx,by,b.r,b.r*1.2,0,0,7);x.fill();
+  x.beginPath();x.moveTo(bx-5,by+b.r*1.18);x.lineTo(bx+5,by+b.r*1.18);x.lineTo(bx,by+b.r*1.4);x.fill();
+  x.fillStyle='#fff6';x.beginPath();x.ellipse(bx-b.r*.35,by-b.r*.4,b.r*.18,b.r*.3,.5,0,7);x.fill();
+  if(b.face)face(bx,by+b.r*.1,b.r*.55,true);
+  b.dx=bx;
+}
+function drawFly(f){
+  const w=Math.sin(t*14+f.p)*.8;
+  x.save();x.translate(f.x,f.y);x.fillStyle=f.c;
+  x.beginPath();x.ellipse(-7,-3,8*Math.abs(w)+2,9,-.4,0,7);x.ellipse(7,-3,8*Math.abs(w)+2,9,.4,0,7);x.fill();
+  x.fillStyle='#fff9';x.beginPath();x.arc(-7,-4,2.2,0,7);x.arc(7,-4,2.2,0,7);x.fill();
+  x.fillStyle='#4c1d95';x.fillRect(-1.5,-7,3,15);x.restore();
+}
+function drawBird(b){
+  const w=Math.sin(t*8+b.p)*8;x.strokeStyle='#4c1d95';x.lineWidth=2.5;x.lineCap='round';
+  x.beginPath();x.moveTo(b.x-14,b.y+w*.5);x.quadraticCurveTo(b.x-7,b.y-w,b.x,b.y);x.quadraticCurveTo(b.x+7,b.y-w,b.x+14,b.y+w*.5);x.stroke();
+}
+function drawHills(){
+  const bt=H;
+  [['#b2f2bb',.82,.06,.0],['#8ce99a',.88,.05,1.7],['#69db7c',.94,.04,3.1]].forEach(([c,yy,am,ph])=>{
+    x.fillStyle=c;x.beginPath();x.moveTo(0,H);
+    for(let i=0;i<=W;i+=20)x.lineTo(i,bt*yy+Math.sin(i/(W*.16)+ph)*H*am);
+    x.lineTo(W,H);x.closePath();x.fill();
+  });
+  flowers.forEach(f=>{
+    const base=H*.97-f.h*.3+Math.sin(f.x/(W*.16)+3.1)*H*.04*.3,sw=Math.sin(t*2+f.p)*3+f.k*Math.sin(t*25)*4;
+    x.strokeStyle='#2f9e44';x.lineWidth=3;x.beginPath();x.moveTo(f.x,base+f.h*.3);x.quadraticCurveTo(f.x+sw,base,f.x+sw,base-f.h);x.stroke();
+    x.fillStyle=f.c;for(let i=0;i<5;i++){const a=i*1.2566+t*(f.k?4:.3);x.beginPath();x.arc(f.x+sw+Math.cos(a)*6,base-f.h+Math.sin(a)*6,5,0,7);x.fill()}
+    x.fillStyle='#ffd43b';x.beginPath();x.arc(f.x+sw,base-f.h,4,0,7);x.fill();
+  });
+}
+function draw(dt){
+  const sky=x.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#7dd3fc');sky.addColorStop(.6,'#bae6fd');sky.addColorStop(1,'#fef9c3');
+  x.fillStyle=sky;x.fillRect(0,0,W,H);
+  drawSun();clouds.forEach(cloudPath);birds.forEach(drawBird);drawHills();
+  balloons.forEach(drawBalloon);flies.forEach(drawFly);
+  parts.forEach(p=>{
+    if(p.e){x.globalAlpha=Math.max(0,p.l);x.font='18px serif';x.fillText(p.e,p.x-9,p.y+6);x.globalAlpha=1}
+    else{x.globalAlpha=Math.max(0,p.l);x.fillStyle=p.c;x.beginPath();x.arc(p.x,p.y,p.r,0,7);x.fill();x.globalAlpha=1}
+  });
+  pts.forEach(p=>{x.globalAlpha=Math.max(0,p.l);x.fillStyle='#fff';x.strokeStyle='#7c3aed';x.lineWidth=4;x.font='700 26px Fredoka,system-ui,sans-serif';x.textAlign='center';x.strokeText(p.t,p.x,p.y);x.fillText(p.t,p.x,p.y);x.globalAlpha=1});
+}
+function step(dt){
+  t+=dt;
+  sun.giggle=Math.max(0,sun.giggle-dt);
+  clouds.forEach(c=>{c.x+=c.v*dt*(play?1.5:1);if(c.x>W+40)c.x=-120;c.sq=Math.max(0,c.sq-dt*3)});
+  birds.forEach(b=>{b.x+=b.v*dt;if(b.x>W+30){b.x=-40;b.y=rnd(.08,.35)*H}});
+  balloons.forEach(b=>{b.y-=b.v*dt*(play?1.4:1);if(b.y<-b.r*3){b.y=H+b.r*2;b.x=rnd(b.r,W-b.r);b.c=pick(COL)}});
+  flies.forEach(f=>{
+    const d=Math.hypot(f.x-ptr.x,f.y-ptr.y);
+    if(d<140){f.tx=ptr.x+(f.x-ptr.x)*3;f.ty=ptr.y+(f.y-ptr.y)*3}
+    else if(Math.hypot(f.x-f.tx,f.y-f.ty)<30||Math.random()<.004){f.tx=rnd(20,W-20);f.ty=rnd(.25,.85)*H}
+    f.tx=Math.max(10,Math.min(W-10,f.tx));f.ty=Math.max(10,Math.min(H-10,f.ty));
+    f.vx+=(f.tx-f.x)*.8*dt;f.vy+=(f.ty-f.y)*.8*dt+Math.sin(t*5+f.p)*30*dt;
+    f.vx*=.97;f.vy*=.97;f.x+=f.vx*dt;f.y+=f.vy*dt;
+  });
+  flowers.forEach(f=>f.k=Math.max(0,f.k-dt*2));
+  parts=parts.filter(p=>(p.l-=dt*1.2)>0);parts.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=500*dt;p.vx*=.99});
+  pts=pts.filter(p=>(p.l-=dt*1.1)>0);pts.forEach(p=>p.y-=40*dt);
+}
+function loop(ts){
+  raf=0;if(document.hidden)return;
+  const dt=Math.min(.05,(ts-last)/1000||0);last=ts;
+  if(!R.matches||play){step(dt);draw(dt);raf=requestAnimationFrame(loop)}
+}
+function kick(){if(!raf){last=performance.now();raf=requestAnimationFrame(loop)}}
+
+function hit(px,py){
+  let did=false;
+  for(let i=balloons.length-1;i>=0;i--){
+    const b=balloons[i],bx=b.dx||b.x;
+    if(((px-bx)/b.r)**2+((py-b.y)/(b.r*1.2))**2<=1.25){
+      burst(bx,b.y,b.c,22,true);ping(rnd(500,800),.18,'triangle',.14);
+      score++;updScore();pts.push({x:bx,y:b.y-b.r,t:'+1',l:1});
+      balloons.splice(i,1);addBalloon(false);return true;
+    }
+  }
+  if(Math.hypot(px-sun.x,py-sun.y)<sun.r*1.4){sun.giggle=1.2;burst(sun.x,sun.y,'#ffd43b',16,true);ping(700,.25,'sine',.1);ping(880,.3,'sine',.08);pts.push({x:sun.x,y:sun.y+sun.r+20,t:'Hee hee! ☀️',l:1.4});return true}
+  for(const c of clouds){
+    if(px>c.x-30*c.s&&px<c.x+95*c.s&&py>c.y-45*c.s&&py<c.y+30*c.s){c.sq=1;burst(c.x+32*c.s,c.y+20*c.s,'#7dd3fc',14,false);ping(320,.3,'sine',.1);return true}
+  }
+  for(const f of flies){if(Math.hypot(px-f.x,py-f.y)<28){f.vx=rnd(-200,200);f.vy=-200;burst(f.x,f.y,f.c,10,true);ping(900,.12,'sine',.08);return true}}
+  for(const f of flowers){if(Math.hypot(px-f.x,py-(H*.95-f.h))<26&&py>H*.7){f.k=1;burst(f.x,py,f.c,10,true);ping(600,.15,'sine',.08);return true}}
+  return did;
+}
+function setPlay(on){
+  play=on;document.body.classList.toggle('kplay',on);
+  if(on){score=0;updScore();seed();for(let i=0;i<6;i++)addBalloon(true);cv.setAttribute('role','application');cv.setAttribute('aria-label','Play area: tap balloons to pop them');}
+  else{cv.removeAttribute('role');cv.removeAttribute('aria-label');seed();balloons.length=Math.min(balloons.length,W<600?6:10)}
+  kick();
+}
+function updScore(){document.getElementById('kscore').textContent='🎈 '+score}
+
+addEventListener('resize',size);
+addEventListener('pointermove',e=>{ptr.x=e.clientX;ptr.y=e.clientY},{passive:true});
+addEventListener('pointerleave',()=>{ptr.x=ptr.y=-999});
+cv.addEventListener('pointerdown',e=>{if(!play)return;ptr.x=e.clientX;ptr.y=e.clientY;if(!hit(e.clientX,e.clientY)){burst(e.clientX,e.clientY,null,10,true);ping(rnd(300,500),.12,'sine',.06)}});
+/* ambient mode: tapping the empty background (not cards/buttons) plays too */
+document.addEventListener('pointerdown',e=>{
+  if(play)return;const el=e.target;
+  if(el!==document.body&&el!==document.documentElement&&!(el.classList&&el.classList.contains('v')))return;
+  if(hit(e.clientX,e.clientY))kick();
+});
+fab.onclick=()=>setPlay(true);
+document.getElementById('kx').onclick=()=>setPlay(false);
+document.getElementById('ksnd').onclick=function(){snd=!snd;this.textContent=snd?'🔊':'🔇'};
+addEventListener('keydown',e=>{if(e.key==='Escape'&&play)setPlay(false)});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)kick()});
+size();kick();
+})();
+</script>
+</body></html>
