@@ -252,6 +252,13 @@ small{color:#6b6b8a}
 #tSlides .card:before{height:5px}
 #pmb button{box-shadow:none}
 
+/* ---- Drawing: share with class ---- */
+.rc.spot{border-color:var(--c4);box-shadow:0 0 0 3px #51cf6655}
+.spb{background:#f0fff4;border:3px solid var(--c4);border-radius:18px;padding:10px;margin:10px 0;text-align:center}
+.spb img{display:block;margin:8px auto 0;width:100%;max-width:380px;aspect-ratio:1;object-fit:contain;background:#fff;border:2px solid var(--b);border-radius:12px;cursor:zoom-in}
+.spl{text-align:center;margin-top:8px}
+.spl img{width:min(100%,520px);aspect-ratio:1;object-fit:contain;background:#fff;border:4px solid var(--c3);border-radius:18px;cursor:zoom-in}
+.spl .nm{font-size:1.2rem;font-weight:700;margin-top:8px;color:#4c1d95}
 /* ======== Responsive layer (phone / tablet / desktop) ======== */
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{overflow-x:hidden;padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);padding-bottom:env(safe-area-inset-bottom)}
@@ -2066,13 +2073,29 @@ const rpTxt=()=>Object.keys(RT[Q.id]||{}).length+' / '+Object.values(S).filter(x
 function updProg(){const e=$('rp');if(e&&Q)e.textContent=rpTxt()}
 function startRate(){if(!R||!Q||Q.t!='draw')return;R.child('q').update({open:false,rate:true}).catch(e=>alert('දෝෂයකි: '+(e.message||e.code)))}
 function showPodium(){if(!R||!Q||Q.t!='draw')return;R.child('q').update({rate:false,podium:true}).catch(e=>alert('දෝෂයකි: '+(e.message||e.code)))}
+const spErr=e=>alert('දෝෂයකි: '+(e.code=='PERMISSION_DENIED'?'Database Rules මගින් ලිවීම ප්‍රතික්ෂේප විය.':(e.message||e.code)));
+function spotArt(id){if(!R||!Q||Q.t!='draw'||Q.open)return;R.child('q').update(Q.spot==id?{spot:null}:{spot:id,gallery:null}).catch(spErr)}
+function galArt(){if(!R||!Q||Q.t!='draw'||Q.open)return;R.child('q').update(Q.gallery?{gallery:null}:{gallery:true,spot:null}).catch(spErr)}
+function resClick(ev){const b=ev.target.closest('button[data-sp],button[data-gal]');if(!b)return;b.dataset.gal?galArt():spotArt(b.dataset.sp)}
+function shareBar(e,q){
+  if(q.open)return '';
+  let h=`<div class="row"><button class="${q.gallery?'r':'g2'}" data-gal="1">${q.gallery?'⏹ චිත්‍ර ගැලරිය නවත්වන්න':'🖼 සියලු චිත්‍ර පන්තියට පෙන්වන්න'}</button></div>`;
+  const s=q.spot&&e.find(([id])=>id==q.spot);
+  if(s)h+=`<div class="spb"><b>📣 පන්තියට පෙන්වමින්: ${esc((S[s[0]]||{}).name||'—')}</b><img src="${esc(s[1].a)}" alt="" onclick="zoom(this)"></div>`;
+  return h;
+}
+function artGrid(e,q){
+  return '<div class="rg">'+e.map(([id,x])=>{const on=q.spot==id;
+    return `<div class="rc${on?' spot':''}"><img src="${esc(x.a)}" alt="" onclick="zoom(this)"><div class="lbl">${esc((S[id]||{}).name||'—')}</div>${q.open?'':`<button class="${on?'r':'g2'}" data-sp="${esc(id)}" style="font-size:.8rem;padding:6px 4px;margin:4px 0 0">${on?'⏹ නවත්වන්න':'📣 පන්තියට පෙන්වන්න'}</button>`}</div>`}).join('')+'</div>';
+}
 function drawArtRes(){
   const q=Q,e=Object.entries(A).filter(([,x])=>x.q==q.id&&okImg(x.a));
+  $('res').onclick=resClick;
   let h=`<p><b>${esc(q.text)}</b> <small>(${TL.draw}) චිත්‍ර ${e.length}</small></p>`;
-  if(q.podium){$('res').innerHTML=h+podiumHTML(rankArt(e,RT[q.id]),S);return}
+  if(q.podium){$('res').innerHTML=h+shareBar(e,q)+podiumHTML(rankArt(e,RT[q.id]),S)+(e.length?'<h3>📣 චිත්‍ර පන්තියට පෙන්වන්න</h3>'+artGrid(e,q):'');return}
   h+=q.rate?`<p>⭐ Rating ක්‍රියාත්මකයි — Rating දුන් සිසුන්: <b id="rp">${rpTxt()}</b></p><button onclick="showPodium()">🏆 Rating අවසන් කර Podium පෙන්වන්න</button>`
            :`<button onclick="startRate()">⭐ ඇඳීම නවත්වා Rating ආරම්භ කරන්න</button>`;
-  $('res').innerHTML=h+'<div class="rg">'+e.map(([,x])=>`<div class="rc"><img src="${esc(x.a)}" alt="" onclick="zoom(this)"></div>`).join('')+'</div>';
+  $('res').innerHTML=h+shareBar(e,q)+artGrid(e,q);
 }
 /* ---- Student: rate others' drawings / see podium ---- */
 async function stuRate(q){
@@ -2106,6 +2129,29 @@ async function stuPodium(q){
   const e=Object.entries(a).filter(([,x])=>x.q==q.id&&okImg(x.a));
   rh=R.child('ratings/'+q.id);
   rh.on('value',s=>{const el=$('pdm');if(tok!=rtok||!el)return;el.innerHTML=podiumHTML(rankArt(e,s.val()),SS,sid)});
+}
+/* ---- Student: teacher shares drawings with the class ---- */
+async function stuSpot(q){
+  const b=$('qb'),tok=++rtok;
+  b.innerHTML=`<b>${esc(q.text)}</b><div id="spm">පූරණය වෙමින්…</div>`;
+  let x,n;
+  try{[x,n]=(await Promise.all([R.child('answers/'+q.spot).once('value'),R.child('students/'+q.spot+'/name').once('value')])).map(v=>v.val())}
+  catch(e){if(tok==rtok&&$('spm'))$('spm').textContent='පූරණය අසාර්ථකයි: '+(e.message||e.code);return}
+  const el=$('spm');if(tok!=rtok||!el)return;
+  if(!x||x.q!=q.id||!okImg(x.a)){el.textContent='චිත්‍රය හමු නොවීය';return}
+  el.innerHTML=`<div class="spl"><img src="${esc(x.a)}" alt="" onclick="zoom(this)"><div class="nm">🎨 ${esc(n||'')}${q.spot==sid?' (ඔබ) 🎉':''}</div></div>`;
+}
+async function stuGallery(q){
+  const b=$('qb'),tok=++rtok;
+  b.innerHTML=`<b>${esc(q.text)}</b><p>🖼 පන්තියේ චිත්‍ර</p><div id="gal">පූරණය වෙමින්…</div>`;
+  let a,n;
+  try{[a,n]=(await Promise.all([R.child('answers').once('value'),R.child('students').once('value')])).map(v=>v.val()||{})}
+  catch(e){if(tok==rtok&&$('gal'))$('gal').textContent='පූරණය අසාර්ථකයි: '+(e.message||e.code);return}
+  const box=$('gal');if(tok!=rtok||!box)return;
+  const it=Object.entries(a).filter(([,x])=>x.q==q.id&&okImg(x.a));
+  if(!it.length){box.textContent='චිත්‍ර නැත';return}
+  box.className='rg';
+  box.innerHTML=it.map(([id,x])=>`<div class="rc"><img src="${esc(x.a)}" alt="" onclick="zoom(this)"><div class="lbl">${esc((n[id]||{}).name||'—')}${id==sid?' (ඔබ)':''}</div></div>`).join('');
 }
 /* ---- Quiz builder / share ---- */
 function addQ(){const q=readQ();if(!q)return;draft.push(q);$('qt').value='';bType();drawDraft()}
@@ -2617,7 +2663,7 @@ document.addEventListener('keydown',e=>{
 function renderQ(){
   const q=q0;if(rh){rh.off();rh=null}
   if(!q){$('qb').textContent='ප්‍රශ්නයක් එනතුරු රැඳී සිටින්න…';return}
-  if(q.t=='draw'&&!q.open)return q.podium?stuPodium(q):stuRate(q);
+  if(q.t=='draw'&&!q.open)return q.gallery?stuGallery(q):q.spot?stuSpot(q):q.podium?stuPodium(q):stuRate(q);
   drawQ($('qb'),q,my&&my.q==q.id?my.a:null,q.open,a=>R.child('answers/'+sid).set({q:q.id,a}));
 }
 /* ---------- සිසුවා: මගේ තිරය ගුරුවරයාට ---------- */
