@@ -403,6 +403,26 @@ body.kplay #khint{display:block}
 @media(prefers-reduced-motion:reduce){.qtm.low{animation:none}.qtm .qtb i{transition:none}}
 .qtrow{display:flex;align-items:center;gap:8px;margin:6px 0 4px;flex-wrap:wrap}.qtrow label{font-weight:600;color:#4c1d95;white-space:nowrap}
 .qtrow select,.qtrow input{flex:1 1 140px;width:auto;margin:0}.qtrow input[hidden]{display:none}
+
+/* ---- Dashboard tiles: 3D flip ---- */
+.tiles{perspective:1000px}
+.tiles button.tile{background:none;box-shadow:none;padding:0;overflow:visible;min-height:150px;perspective:900px;display:block;position:relative;border-radius:26px}
+.tiles button.tile:active:not(:disabled){transform:none;box-shadow:none}
+.tiles button.tile[hidden]{display:none}
+.tile .fl{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .65s cubic-bezier(.4,.2,.2,1.2)}
+.tile .ff,.tile .fb{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:16px 10px;border-radius:26px;text-align:center;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.tile .fb{transform:rotateY(180deg)}
+.tile .fb i{font-size:2rem}.tile .fb b{font-size:1rem;line-height:1.35}
+.tile.t1 .ff,.tile.t1 .fb{background:linear-gradient(#ff8787,#fa5252);box-shadow:0 7px 0 #c92a2a}
+.tile.t2 .ff,.tile.t2 .fb{background:linear-gradient(#ffc078,#fd7e14);box-shadow:0 7px 0 #c25e00}
+.tile.t3 .ff,.tile.t3 .fb{background:linear-gradient(#69db7c,#2f9e44);box-shadow:0 7px 0 #237032}
+.tile.t4 .ff,.tile.t4 .fb{background:linear-gradient(#b197fc,#7048e8);box-shadow:0 7px 0 #4c2fb0}
+.tile:active .ff,.tile:active .fb{box-shadow:0 2px 0 #0003;margin-top:5px}
+@media(hover:hover){.tile:hover .fl,.tile:focus-visible .fl{transform:rotateY(180deg)}.tile:hover .ff i{transform:none}}
+.tile.spin .fl{animation:tspin .6s ease-in-out}
+@keyframes tspin{from{transform:rotateY(0)}to{transform:rotateY(360deg)}}
+@media(max-width:700px){.tiles button.tile{min-height:118px}.tile .ff,.tile .fb{padding:12px 8px;border-radius:22px}.tile .fb b{font-size:.85rem}}
+@media(prefers-reduced-motion:reduce){.tile .fl{transition:none}.tile.spin .fl{animation:none}}
 </style></head><body>
 <header><span>ICTPLUZ Smart Classroom</span><span id="net">Offline</span></header>
 <div id="jb" hidden><span>Join at <b id="jbu"></b></span><span>Code:</span><span class="code" id="jbc" style="font-size:1.5rem;letter-spacing:4px"></span><button onclick="bigView()">QR ▦</button></div>
@@ -416,10 +436,10 @@ body.kplay #khint{display:block}
 <button class="o" style="text-align:center" onclick="resetPw()">මුරපදය අමතකද? (Reset)</button></div></div>
 
 <div class="v" id="tDash" hidden><div class="card"><h3>👋 අද අපි මොකක්ද කරන්නේ?</h3><div class="tiles">
-<button class="tile t1" onclick="openRoom()"><i>🏫</i><b>Start Classroom</b><small>නව පන්තියක් අරඹන්න</small></button>
-<button id="rs" class="tile t2" onclick="openRoom(localStorage.room)" hidden><i>🔁</i><b>පෙර පන්තිය</b><small>නැවත විවෘත කරන්න</small></button>
-<button class="tile t3" onclick="show('tBuild')"><i>🧠</i><b>Quiz සාදන්න</b><small>ප්‍රශ්න සහ තරඟ</small></button>
-<button class="tile t4" onclick="newDeck()"><i>🎨</i><b>Presentation සාදන්න</b><small>ලස්සන slides</small></button></div></div>
+<button class="tile t1" onclick="openRoom()"><span class="fl"><span class="ff"><i>🏫</i><b>Start Classroom</b><small>නව පන්තියක් අරඹන්න</small></span><span class="fb"><i>👉</i><b>Join code එකක් සාදා සිසුන්ට QR එකෙන් සම්බන්ධ කරන්න</b><small>ඔබන්න ▶</small></span></span></button>
+<button id="rs" class="tile t2" onclick="openRoom(localStorage.room)" hidden><span class="fl"><span class="ff"><i>🔁</i><b>පෙර පන්තිය</b><small>නැවත විවෘත කරන්න</small></span><span class="fb"><i>👉</i><b>ඔබේ අවසන් පන්තිය නැවත විවෘත කරන්න</b><small>ඔබන්න ▶</small></span></span></button>
+<button class="tile t3" onclick="show('tBuild')"><span class="fl"><span class="ff"><i>🧠</i><b>Quiz සාදන්න</b><small>ප්‍රශ්න සහ තරඟ</small></span><span class="fb"><i>👉</i><b>ප්‍රශ්න සාදා සිසුන් සමඟ තරඟයක් කරන්න</b><small>ඔබන්න ▶</small></span></span></button>
+<button class="tile t4" onclick="newDeck()"><span class="fl"><span class="ff"><i>🎨</i><b>Presentation සාදන්න</b><small>ලස්සන slides</small></span><span class="fb"><i>👉</i><b>ලස්සන slides සාදා පන්තියට පෙන්වන්න</b><small>ඔබන්න ▶</small></span></span></button></div></div>
 <div class="card"><h3>🧠 මගේ Quiz</h3><div id="mq"></div></div><div class="card"><h3>🎨 මගේ Presentations</h3><div id="mp"></div></div><div class="card" id="zr" hidden></div>
 <button class="o" onclick="auth.signOut()">ඉවත් වන්න</button></div>
 
@@ -3190,6 +3210,21 @@ document.getElementById('ksnd').onclick=function(){snd=!snd;this.textContent=snd
 addEventListener('keydown',e=>{if(e.key==='Escape'&&play)setPlay(false)});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)kick()});
 size();kick();
+})();
+</script>
+<script>
+/* tile flip: on touch screens the tile spins, then the action runs */
+(function(){
+ var touch=matchMedia('(hover:none)').matches;
+ document.addEventListener('click',function(e){
+  var b=e.target.closest&&e.target.closest('button.tile');
+  if(!b||b._go)return;
+  if(!touch||matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  e.preventDefault();e.stopImmediatePropagation();
+  if(b.classList.contains('spin'))return;
+  b.classList.add('spin');
+  setTimeout(function(){b.classList.remove('spin');b._go=1;b.click();b._go=0},420);
+ },true);
 })();
 </script>
 </body></html>
