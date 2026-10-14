@@ -303,8 +303,8 @@ small{color:#6b6b8a}
 <button class="g2" onclick="$('sds').requestFullscreen&&$('sds').requestFullscreen()">සම්පූර්ණ තිරය</button></div>
 <div class="card"><video id="vid" autoplay muted playsinline></video><div id="vm">ගුරුවරයා තිරය Share කරන තෙක් රැඳී සිටින්න…</div>
 <button class="g2" onclick="$('vid').requestFullscreen&&$('vid').requestFullscreen()">සම්පූර්ණ තිරය</button></div>
-<div class="card"><h3>📤 මගේ තිරය ගුරුවරයාට</h3><button id="msb" onclick="myShare()">මගේ තිරය Share කරන්න</button>
-<div id="mss" hidden><small>ඔබේ තිරය ගුරුවරයාට පෙනෙයි…</small><button class="r" onclick="myShareStop()">නවත්වන්න</button></div>
+<div class="card"><h3>📤 මගේ තිරය ගුරුවරයාට</h3><div id="msb"><button onclick="myShare()">🖥 මගේ තිරය Share කරන්න</button><button class="g2" onclick="myCam()">📷 කැමරාව Share කරන්න</button></div>
+<div id="mss" hidden><small>ඔබේ තිරය / කැමරාව ගුරුවරයාට පෙනෙයි…</small><button class="g2" id="mfl" onclick="myFlip()" hidden>🔄 කැමරාව මාරු කරන්න</button><button class="r" onclick="myShareStop()">නවත්වන්න</button></div>
 <small>ගුරුවරයා තෝරා ගත් විට පමණක් ඔබේ තිරය ඔහුට පෙනේ.</small></div>
 <div class="card" id="qb">ප්‍රශ්නයක් එනතුරු රැඳී සිටින්න…</div></div>
 
@@ -1719,7 +1719,7 @@ const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
 const C0=(new URLSearchParams(location.search).get('c')||'').toUpperCase();
 let R,Q,A={},S={},stream,sid,pcs={},watched={},q0,my,spc,JU='',joining=false;
 let RT={},SS={},RA=null,rh=null,rtok=0;
-let SSH={},tvId=null,tvpc=null,tvStream=null,tvBc=false,sstream=null,sspc=null;
+let SSH={},tvId=null,tvpc=null,tvStream=null,tvBc=false,sstream=null,sspc=null,camFace='environment',smode='';
 let deckD={slides:[]},bsi=0,editId=null,PC={},PD=null,pi=0,PV=null,pvi=0,SD=null,SI=null,pStep=0,pNts=[],tmT=0,tmI=null,lastI=-1,sStep=0,sLast=-1,lzOn=false,ntOn=false;
 
 db.ref('.info/connected').on('value',s=>{$('net').textContent=s.val()?'Online':'Offline';$('net').className=s.val()?'on':''});
@@ -2522,16 +2522,35 @@ function renderQ(){
   drawQ($('qb'),q,my&&my.q==q.id?my.a:null,q.open,a=>R.child('answers/'+sid).set({q:q.id,a}));
 }
 /* ---------- සිසුවා: මගේ තිරය ගුරුවරයාට ---------- */
-async function myShare(){
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getDisplayMedia)return alert('මෙම උපාංගයෙන් තිරය Share කළ නොහැක. පරිගණකයක (Chrome / Edge) භාවිතා කරන්න.');
-  try{sstream=await navigator.mediaDevices.getDisplayMedia({video:true})}catch(e){return}
+async function myStart(get,mode){
+  if(sstream)myShareStop();
+  try{sstream=await get()}catch(e){return alert('අවසර ලබා දී නැත හෝ ආරම්භ කළ නොහැක')}
+  smode=mode;
   sstream.getVideoTracks()[0].onended=myShareStop;
   const B=R.child('ss/'+sid);B.onDisconnect().remove();
-  await B.set({on:Date.now()});
-  $('msb').hidden=true;$('mss').hidden=false;
+  await B.set({on:Date.now(),m:mode});
+  $('msb').hidden=true;$('mss').hidden=false;$('mfl').hidden=mode!=='cam';
+}
+function myShare(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getDisplayMedia)return alert('මෙම උපාංගයෙන් තිරය Share කළ නොහැක. "📷 කැමරාව Share කරන්න" භාවිතා කරන්න, නැත්නම් පරිගණකයක (Chrome / Edge) භාවිතා කරන්න.');
+  return myStart(()=>navigator.mediaDevices.getDisplayMedia({video:true}),'screen');
+}
+function myCam(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return alert('මෙම බ්‍රවුසරයෙන් කැමරාව භාවිතා කළ නොහැක (https:// හරහා විවෘත කරන්න).');
+  return myStart(()=>navigator.mediaDevices.getUserMedia({video:{facingMode:camFace}}),'cam');
+}
+async function myFlip(){
+  if(smode!=='cam'||!sstream)return;
+  const nf=camFace==='environment'?'user':'environment';
+  try{
+    const ns=await navigator.mediaDevices.getUserMedia({video:{facingMode:nf}}),nt=ns.getVideoTracks()[0];
+    if(sspc){const sn=sspc.getSenders().find(x=>x.track&&x.track.kind==='video');if(sn)await sn.replaceTrack(nt)}
+    sstream.getTracks().forEach(t=>{t.onended=null;t.stop()});
+    sstream=ns;camFace=nf;nt.onended=myShareStop;
+  }catch(e){alert('කැමරාව මාරු කළ නොහැක')}
 }
 function myShareStop(){
-  if(sstream)sstream.getTracks().forEach(t=>t.stop());sstream=null;
+  if(sstream)sstream.getTracks().forEach(t=>{t.onended=null;t.stop()});sstream=null;smode='';
   if(sspc){sspc.close();sspc=null}
   if(R&&sid)R.child('ss/'+sid).remove();
   $('msb').hidden=false;$('mss').hidden=true;
