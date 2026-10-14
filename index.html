@@ -1793,7 +1793,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeBig()});
 function copyLink(){navigator.clipboard.writeText($('ju').textContent).then(()=>alert('පිටපත් කරන ලදී ✅'))}
 function listenT(){
   R.child('students').on('value',s=>{S=s.val()||{};drawList();drawSS()});
-  R.child('ss').on('value',s=>{SSH=s.val()||{};drawSS()});
+  R.child('sig').on('value',s=>{const v=s.val()||{};SSH={};Object.keys(v).forEach(k=>{if(v[k]&&v[k].up)SSH[k]=v[k].up});drawSS()});
   R.child('q').on('value',s=>{Q=s.val();drawRes();drawList()});
   R.child('answers').on('value',s=>{A=s.val()||{};drawRes();drawList()});
   R.child('ratings').on('value',s=>{RT=s.val()||{};Q&&Q.t=='draw'&&Q.podium?drawRes():updProg()});
@@ -1824,7 +1824,7 @@ function drawSS(){
 async function ssView(id){
   ssClose();tvId=id;
   $('ssv').hidden=false;$('ssn').textContent=(S[id]&&S[id].name)||'';$('svm').textContent='සම්බන්ධ වෙමින්…';
-  const B=R.child('ss/'+id);
+  const B=R.child('sig/'+id+'/up');
   try{await Promise.all(['offer','answer','sc','tc'].map(k=>B.child(k).remove()))}catch(e){console.error(e);$('svm').textContent='සම්බන්ධ විය නොහැක: '+(e.code||e.message);return}
   if(tvId!==id)return;
   B.child('offer').on('value',async s=>{
@@ -1842,7 +1842,7 @@ async function ssView(id){
 }
 function ssClose(){
   if(tvBc)ssBcastStop();
-  if(tvId&&R){const B=R.child('ss/'+tvId);B.child('offer').off();B.child('sc').off();B.child('want').remove().catch(()=>{})}
+  if(tvId&&R){const B=R.child('sig/'+tvId+'/up');B.child('offer').off();B.child('sc').off();B.child('want').remove().catch(()=>{})}
   if(tvpc){tvpc.close();tvpc=null}
   tvStream=null;tvId=null;
   const v=$('sv');if(v)v.srcObject=null;
@@ -2529,11 +2529,11 @@ async function myStart(get,mode){
   smode=mode;
   sstream.getVideoTracks()[0].onended=myShareStop;
   try{
-    const B=R.child('ss/'+sid);await B.onDisconnect().remove();
+    const B=R.child('sig/'+sid+'/up');await B.onDisconnect().remove();
     await B.set({on:Date.now(),m:mode});
   }catch(e){
     console.error(e);myShareStop();
-    return alert('Share ආරම්භ කළ නොහැක: '+(e.code==='PERMISSION_DENIED'||/permission/i.test(e.message||'')?'Firebase Database Rules මගින් "ss" ලිවීම ප්‍රතික්ෂේප විය (PERMISSION_DENIED).':(e.message||e.code)));
+    return alert('Share ආරම්භ කළ නොහැක: '+(e.code==='PERMISSION_DENIED'||/permission/i.test(e.message||'')?'Firebase Database Rules මගින් "sig/…/up" ලිවීම ප්‍රතික්ෂේප විය (PERMISSION_DENIED).':(e.message||e.code)));
   }
   $('msb').hidden=true;$('mss').hidden=false;$('mfl').hidden=mode!=='cam';
 }
@@ -2558,7 +2558,7 @@ async function myFlip(){
 function myShareStop(){
   if(sstream)sstream.getTracks().forEach(t=>{t.onended=null;t.stop()});sstream=null;smode='';
   if(sspc){sspc.close();sspc=null}
-  if(R&&sid)R.child('ss/'+sid).remove();
+  if(R&&sid)R.child('sig/'+sid+'/up').remove();
   $('msb').hidden=false;$('mss').hidden=true;
 }
 async function sJoin(){
@@ -2575,12 +2575,12 @@ async function sJoin(){
   R.child('students/'+sid+'/score').on('value',s=>$('sc2').textContent=s.val()||0);
   R.child('students').on('value',s=>{SS=s.val()||{};const v=Object.entries(SS).sort((a,b)=>(b[1].score||0)-(a[1].score||0)),i=v.findIndex(x=>x[0]==sid);if(i>=0)$('me').textContent=($('sn').value.trim()||'')+' · 🏆 '+(i+1)+'/'+v.length});
   R.child('sharing').on('value',s=>{
-    if(s.val()){$('vm').textContent='සම්බන්ධ වෙමින්…';R.child('sig/'+sid).remove().then(()=>R.child('sig/'+sid+'/ready').set(Date.now()))}
+    if(s.val()){$('vm').textContent='සම්බන්ධ වෙමින්…';Promise.all(['offer','answer','sc','tc','ready'].map(k=>R.child('sig/'+sid+'/'+k).remove())).then(()=>R.child('sig/'+sid+'/ready').set(Date.now()))}
     else{if(spc)spc.close();$('vid').srcObject=null;$('vm').textContent='ගුරුවරයා තිරය Share කරන තෙක් රැඳී සිටින්න…'}});
-  R.child('ss/'+sid+'/want').on('value',async s=>{
+  R.child('sig/'+sid+'/up/want').on('value',async s=>{
     if(!s.val()||!sstream)return;
     if(sspc)sspc.close();
-    const pc=sspc=new RTCPeerConnection(ICE),B=R.child('ss/'+sid);
+    const pc=sspc=new RTCPeerConnection(ICE),B=R.child('sig/'+sid+'/up');
     B.child('answer').off();B.child('tc').off();
     sstream.getTracks().forEach(t=>pc.addTrack(t,sstream));
     pc.onicecandidate=e=>e.candidate&&B.child('sc').push(JSON.stringify(e.candidate));
